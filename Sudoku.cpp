@@ -10,11 +10,30 @@
 
 using namespace std;
 
+/*###### rowCol Class ######*/
+class rowCol
+{
+public:
+	int row;
+	int col;
+	rowCol(int inputRow, int inputCol);
+};
+
+rowCol::rowCol(int inputRow, int inputCol)
+{
+	row = inputRow;
+	col = inputCol;
+	return;
+}
+
+/*###### Board Class ######*/
+
 class Board
 {
 	int dim;
 	int ** cells;
 	long totalChecks;
+	bool failed;
 public:
 	Board (int);
 	~Board();
@@ -24,6 +43,10 @@ public:
 	static Board * fromFile(string);
 	bool checkForVictory();
 	int get_dim() {return dim;}
+	rowCol baord::findEmptySquare();
+	bool isValidMove(rowCol position, int value);
+	bool hasFailed() {return failed;}
+	void setFailed(bool state);
 };
 
 Board::Board(int d) {
@@ -36,6 +59,7 @@ Board::Board(int d) {
 		for(int j=0; j<dim;j++)
 			cells[i][j] = 0;
 	}
+	failed = false;
 	totalChecks = 0;
 }
 
@@ -132,6 +156,25 @@ bool Board::checkForVictory() {
 	}
 	return true;
 }
+rowCol baord::findEmptySquare()
+{
+	for(int i=1; i<dim+1;i++)
+	for(int j=1;j<dim+1;j++)
+		if(this->get_square_value(i,j)==0)
+			return rowCol(i, j);
+	return rowCol(0, 0);
+}
+
+bool isValidMove(rowCol position, int value)
+{
+	return true;
+}
+
+void setFailed(bool state);
+{
+	failed = state;
+	return;
+}
 
 void testBasics() {
 	Board * b = new Board(4);
@@ -164,4 +207,36 @@ int main(int argc, char* argv[])
 {
 	testBasics();
 	return 0;
+}
+
+
+/*###### BackTracking Search ######*/
+
+Board backTrackingSearch(Board initialBoard)
+{
+	return recursiveBackTrackingSearch(initialBoard);
+}
+
+Board recursiveBackTrackingSearch(Board currentBoard)
+{
+	Board resultBoard;
+	rowCol emptySquare = currentBoard->findEmptySquare();
+	if (emptySquare.row == 0)
+		return currentBoard;
+	for (int i=1; i<dim+1; i++)
+	{
+		if (currentBoard->isValidMove(emptySquare,i))
+		{
+			currentBoard->set_square_value(emptySquare.row, emptySquare.col, i);
+			resultBoard = recursiveBackTrackingSearch(currentBoard);
+			if(!currentBoard->hasFailed)
+			{
+				return resultBoard;
+			}
+			currentBoard->set_square_value(emptySquare.row, emptySquare.col, 0);
+			currentBoard->setFailed(false);
+		}
+	}
+	currentBoard->setFailed(true);
+	return currentBoard;
 }
