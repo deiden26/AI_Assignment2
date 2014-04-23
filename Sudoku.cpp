@@ -43,7 +43,7 @@ public:
 	static Board * fromFile(string);
 	bool checkForVictory();
 	int get_dim() {return dim;}
-	rowCol baord::findEmptySquare();
+	rowCol findEmptySquare();
 	bool isValidMove(rowCol position, int value);
 	bool hasFailed() {return failed;}
 	void setFailed(bool state);
@@ -156,7 +156,7 @@ bool Board::checkForVictory() {
 	}
 	return true;
 }
-rowCol baord::findEmptySquare()
+rowCol Board::findEmptySquare()
 {
 	for(int i=1; i<dim+1;i++)
 	for(int j=1;j<dim+1;j++)
@@ -165,12 +165,12 @@ rowCol baord::findEmptySquare()
 	return rowCol(0, 0);
 }
 
-bool isValidMove(rowCol position, int value)
+bool Board::isValidMove(rowCol position, int value)
 {
 	return true;
 }
 
-void setFailed(bool state);
+void Board::setFailed(bool state)
 {
 	failed = state;
 	return;
@@ -212,31 +212,32 @@ int main(int argc, char* argv[])
 
 /*###### BackTracking Search ######*/
 
-Board backTrackingSearch(Board initialBoard)
-{
-	return recursiveBackTrackingSearch(initialBoard);
-}
 
 Board recursiveBackTrackingSearch(Board currentBoard)
 {
-	Board resultBoard;
-	rowCol emptySquare = currentBoard->findEmptySquare();
+	Board resultBoard = currentBoard;
+	rowCol emptySquare = currentBoard.findEmptySquare();
 	if (emptySquare.row == 0)
 		return currentBoard;
-	for (int i=1; i<dim+1; i++)
+	for (int i=1; i<currentBoard.get_dim()+1; i++)
 	{
-		if (currentBoard->isValidMove(emptySquare,i))
+		if (currentBoard.isValidMove(emptySquare,i))
 		{
-			currentBoard->set_square_value(emptySquare.row, emptySquare.col, i);
+			currentBoard.set_square_value(emptySquare.row, emptySquare.col, i);
 			resultBoard = recursiveBackTrackingSearch(currentBoard);
-			if(!currentBoard->hasFailed)
+			if(!(resultBoard.hasFailed()))
 			{
 				return resultBoard;
 			}
-			currentBoard->set_square_value(emptySquare.row, emptySquare.col, 0);
-			currentBoard->setFailed(false);
+			currentBoard.set_square_value(emptySquare.row, emptySquare.col, 0);
+			currentBoard.setFailed(false);
 		}
 	}
-	currentBoard->setFailed(true);
+	currentBoard.setFailed(true);
 	return currentBoard;
+}
+
+Board backTrackingSearch(Board initialBoard)
+{
+	return recursiveBackTrackingSearch(initialBoard);
 }
