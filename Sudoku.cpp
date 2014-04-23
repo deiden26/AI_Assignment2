@@ -47,6 +47,7 @@ public:
 	bool isValidMove(rowCol position, int value);
 	bool hasFailed() {return failed;}
 	void setFailed(bool state);
+	void printBoard();
 };
 
 Board::Board(int d) {
@@ -202,6 +203,19 @@ void Board::setFailed(bool state)
 	return;
 }
 
+void Board::printBoard()
+{
+	cout << endl;
+	for(int i=1; i<dim+1;i++)
+	{
+		for(int j=1; j<dim+1; j++)
+		{
+			cout << this->get_square_value(i, j);
+			cout << " ";
+		}
+		cout << endl;
+	}
+}
 
 void testBasics() {
 	Board * b = new Board(4);
@@ -267,6 +281,7 @@ int main(int argc, char* argv[])
 {
 	Board *easyBoard_4x4 = Board::fromFile("4x4.sudoku");
 	backTrackingSearch(easyBoard_4x4);
+	easyBoard_4x4->printBoard();
 	if (easyBoard_4x4->checkForVictory())
 		cout << "Victory!\n";
 	else
