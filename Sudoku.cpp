@@ -223,13 +223,13 @@ void Board::printBoard()
 
 void recursiveBackTrackingSearch(Board *currentBoard)
 {
-	currentBoard->printBoard();
+	//currentBoard->printBoard(); //See board at every recursion
 	rowCol emptySquare = currentBoard->findEmptySquare();
 	if (emptySquare.row == 0)
 		return;
 	for (int i=1; i<currentBoard->get_dim()+1; i++)
 	{
-		cout << i << " ";
+		//cout << i << " "; //See each attempted input
 		if (currentBoard->isValidMove(emptySquare,i))
 		{
 			currentBoard->set_square_value(emptySquare.row, emptySquare.col, i);
@@ -256,15 +256,49 @@ void backTrackingSearch(Board *initialBoard)
 
 int main(int argc, char* argv[])
 {
-	Board *easyBoard_4x4 = Board::fromFile("4x4.sudoku");
-	easyBoard_4x4->printBoard();
-	backTrackingSearch(easyBoard_4x4);
-	easyBoard_4x4->printBoard();
-	if (easyBoard_4x4->hasFailed())
-		cout << "Failed\n";
-	if (easyBoard_4x4->checkForVictory())
+	/* 4x4 board */
+	Board *inputBoard_4x4 = Board::fromFile("4x4.sudoku");
+	inputBoard_4x4->printBoard();
+	backTrackingSearch(inputBoard_4x4);
+	inputBoard_4x4->printBoard();
+
+	if (inputBoard_4x4->checkForVictory())
 		cout << "Victory!\n";
 	else
 		cout << "Defeat\n";
+
+	/* 9x9 board */
+	Board *inputBoard_9x9 = Board::fromFile("9x9.sudoku");
+	inputBoard_9x9->printBoard();
+	backTrackingSearch(inputBoard_9x9);
+	inputBoard_9x9->printBoard();
+
+	if (inputBoard_9x9->checkForVictory())
+		cout << "Victory!\n";
+	else
+		cout << "Defeat\n";
+
+	/* 16x16 board */
+	Board *inputBoard_16x16 = Board::fromFile("16x16.sudoku");
+	inputBoard_16x16->printBoard();
+	backTrackingSearch(inputBoard_16x16);
+	inputBoard_16x16->printBoard();
+
+	if (inputBoard_16x16->checkForVictory())
+		cout << "Victory!\n";
+	else
+		cout << "Defeat\n";
+
+	/* 25x25 board */
+	Board *inputBoard_25x25 = Board::fromFile("25x25.sudoku");
+	inputBoard_25x25->printBoard();
+	backTrackingSearch(inputBoard_25x25);
+	inputBoard_25x25->printBoard();
+
+	if (inputBoard_25x25->checkForVictory())
+		cout << "Victory!\n";
+	else
+		cout << "Defeat\n";
+
 	return 1;
 }
