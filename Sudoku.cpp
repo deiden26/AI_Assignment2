@@ -118,6 +118,7 @@ Board * Board::fromFile(string inFileName) {
 }
 
 bool Board::checkForVictory() {
+	cout << "Checking for victory\n";
 	unsigned long victory = 0;
 	//optimization: check if it's filled:
 	for(int i=1; i<dim+1;i++)
@@ -139,16 +140,13 @@ bool Board::checkForVictory() {
 	}
 	int dimsqrt = (int)(sqrt((double)dim));
 	//check little squares:
-	cout << "checking little squares" << endl;
 	for(int i=0;i<dimsqrt;i++) {
 		for(int j=0;j<dimsqrt;j++) {
 			unsigned long squareTotal = 0;
 			for(int k=1; k<dimsqrt+1;k++) {
 				for(int m=1; m<dimsqrt+1;m++) {
 					squareTotal += 1 << this->get_square_value(i*dimsqrt+k, j*dimsqrt+m);
-					cout << this->get_square_value(i*dimsqrt+k, j*dimsqrt+m);
 				}
-				cout << endl;
 			}
 			if(squareTotal != victory)
 				return false;
@@ -159,7 +157,7 @@ bool Board::checkForVictory() {
 rowCol Board::findEmptySquare()
 {
 	for(int i=1; i<dim+1;i++)
-	for(int j=1;j<dim+1;j++)
+	for(int j=1;j <dim+1;j++)
 		if(this->get_square_value(i,j)==0)
 			return rowCol(i, j);
 	return rowCol(0, 0);
@@ -167,6 +165,34 @@ rowCol Board::findEmptySquare()
 
 bool Board::isValidMove(rowCol position, int value)
 {
+	for (int i=1; i<dim+1 ;i++)
+	{
+		/* Check column */
+		if (this->get_square_value(i, position.col) == value)
+		{
+			return false;
+		}
+		/* Check row */
+		if (this->get_square_value(position.row, i) == value)
+		{
+			return false;
+		}
+	}
+
+	int dimsqrt = (int)(sqrt((double)dim));
+	int squareRow = ceil(position.row/dimsqrt);
+	int squareCol = ceil(position.col/dimsqrt);
+
+	for(int k=1; k<dimsqrt+1;k++)
+	{
+		for(int m=1; m<dimsqrt+1;m++)
+		{
+			if (this->get_square_value(squareRow*dimsqrt+k, squareCol*dimsqrt+m) == value)
+			{
+				return false;
+			}
+		}
+	}
 	return true;
 }
 
@@ -202,19 +228,12 @@ void testBasics() {
 }
 
 
-
-int main(int argc, char* argv[])
-{
-	testBasics();
-	return 0;
-}
-
-
 /*###### BackTracking Search ######*/
 
 
 Board recursiveBackTrackingSearch(Board currentBoard)
 {
+	cout << ".";
 	Board resultBoard = currentBoard;
 	rowCol emptySquare = currentBoard.findEmptySquare();
 	if (emptySquare.row == 0)
@@ -240,4 +259,17 @@ Board recursiveBackTrackingSearch(Board currentBoard)
 Board backTrackingSearch(Board initialBoard)
 {
 	return recursiveBackTrackingSearch(initialBoard);
+}
+
+/*###### main Function ######*/
+
+int main(int argc, char* argv[])
+{
+	Board *easyBoard_4x4 = Board::fromFile("4x4.sudoku");
+	*easyBoard_4x4 = backTrackingSearch(*easyBoard_4x4);
+	if (easyBoard_4x4->checkForVictory())
+		cout << "Victory!\n";
+	else
+		cout << "Defeat\n";
+	return 1;
 }
