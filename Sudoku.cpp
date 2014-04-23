@@ -266,27 +266,32 @@ void Board::printBoard()
 /*###### BackTracking Search ######*/
 
 
-void recursiveBackTrackingSearch(Board *currentBoard)
+int recursiveBackTrackingSearch(Board *currentBoard, int consistencyCount)
 {
 	//currentBoard->printBoard(); //See board at every recursion
 	/* Find a square to attempt to fill */
 	rowCol emptySquare = currentBoard->findEmptySquare();
 	/* If there isn't a free square, the search is complete */
 	if (emptySquare.row == 0)
-		return;
+		return consistencyCount;
 	/* Try all possible values for the given free square */
 	for (int i=1; i<currentBoard->get_dim()+1; i++)
 	{
 		//cout << i << " "; //See each attempted input
 		if (currentBoard->isValidMove(emptySquare,i))
 		{
+			consistencyCount++;
+			if (consistencyCount > 1000000)
+			{
+				return consistencyCount;
+			}
 			/* If you find a number that is allowed, fill it in and recurse */
 			currentBoard->set_square_value(emptySquare.row, emptySquare.col, i);
-			recursiveBackTrackingSearch(currentBoard);
+			consistencyCount = recursiveBackTrackingSearch(currentBoard, consistencyCount);
 
 			if(!(currentBoard->hasFailed()))
 			{
-				return;
+				return consistencyCount;
 			}
 			/* If the search failed, erase value and attempt with different value */
 			currentBoard->set_square_value(emptySquare.row, emptySquare.col, 0);
@@ -295,13 +300,13 @@ void recursiveBackTrackingSearch(Board *currentBoard)
 	}
 	/* Fail if there isn't a valid number to put in the selected free square */
 	currentBoard->setFailed(true);
-	return;
+	return consistencyCount;
 }
 
-void backTrackingSearch(Board *initialBoard)
+int backTrackingSearch(Board *initialBoard)
 {
-	recursiveBackTrackingSearch(initialBoard);
-	return;
+	int numberOfConsistencyChecks = recursiveBackTrackingSearch(initialBoard, 0);
+	return numberOfConsistencyChecks;
 }
 
 /*###### main Function ######*/
@@ -312,7 +317,7 @@ int main(int argc, char* argv[])
 	Board *inputBoard_4x4 = Board::fromFile("4x4.sudoku");
 
 	inputBoard_4x4->printBoard();
-	backTrackingSearch(inputBoard_4x4);
+	int numberOfConsistencyChecks_4x4 = backTrackingSearch(inputBoard_4x4);
 	inputBoard_4x4->printBoard();
 
 	if (inputBoard_4x4->checkForVictory())
@@ -324,7 +329,7 @@ int main(int argc, char* argv[])
 	Board *inputBoard_9x9 = Board::fromFile("9x9.sudoku");
 
 	inputBoard_9x9->printBoard();
-	backTrackingSearch(inputBoard_9x9);
+	int numberOfConsistencyChecks_9x9 = backTrackingSearch(inputBoard_9x9);
 	inputBoard_9x9->printBoard();
 
 	if (inputBoard_9x9->checkForVictory())
@@ -336,7 +341,7 @@ int main(int argc, char* argv[])
 	Board *inputBoard_16x16 = Board::fromFile("16x16.sudoku");
 
 	inputBoard_16x16->printBoard();
-	backTrackingSearch(inputBoard_16x16);
+	int numberOfConsistencyChecks_16x16 = backTrackingSearch(inputBoard_16x16);
 	inputBoard_16x16->printBoard();
 
 	if (inputBoard_16x16->checkForVictory())
@@ -348,13 +353,19 @@ int main(int argc, char* argv[])
 	Board *inputBoard_25x25 = Board::fromFile("25x25.sudoku");
 
 	inputBoard_25x25->printBoard();
-	backTrackingSearch(inputBoard_25x25);
+	int numberOfConsistencyChecks_25x25 = backTrackingSearch(inputBoard_25x25);
 	inputBoard_25x25->printBoard();
 
 	if (inputBoard_25x25->checkForVictory())
 		cout << "Victory!\n";
 	else
 		cout << "Defeat\n";
+
+	cout << "Problem\t" << "| " << "BackTracking\t" << endl;
+	cout << "4x4\t" << "| " << numberOfConsistencyChecks_4x4 << endl; 
+	cout << "9x9\t" << "| " << numberOfConsistencyChecks_9x9 << endl;
+	cout << "16x16\t" << "| " << numberOfConsistencyChecks_16x16 << endl;
+	cout << "25x25\t" << "| " << numberOfConsistencyChecks_25x25 << endl; 
 
 	return 1;
 }
