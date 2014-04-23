@@ -202,6 +202,7 @@ void Board::setFailed(bool state)
 	return;
 }
 
+
 void testBasics() {
 	Board * b = new Board(4);
 	b->set_square_value(1, 1, 1);
@@ -231,32 +232,31 @@ void testBasics() {
 /*###### BackTracking Search ######*/
 
 
-Board recursiveBackTrackingSearch(Board currentBoard)
+void recursiveBackTrackingSearch(Board *currentBoard)
 {
 	cout << ".";
-	Board resultBoard = currentBoard;
-	rowCol emptySquare = currentBoard.findEmptySquare();
+	rowCol emptySquare = currentBoard->findEmptySquare();
 	if (emptySquare.row == 0)
-		return currentBoard;
-	for (int i=1; i<currentBoard.get_dim()+1; i++)
+		return;
+	for (int i=1; i<currentBoard->get_dim()+1; i++)
 	{
-		if (currentBoard.isValidMove(emptySquare,i))
+		if (currentBoard->isValidMove(emptySquare,i))
 		{
-			currentBoard.set_square_value(emptySquare.row, emptySquare.col, i);
-			resultBoard = recursiveBackTrackingSearch(currentBoard);
-			if(!(resultBoard.hasFailed()))
+			currentBoard->set_square_value(emptySquare.row, emptySquare.col, i);
+			recursiveBackTrackingSearch(currentBoard);
+			if(!(currentBoard->hasFailed()))
 			{
-				return resultBoard;
+				return;
 			}
-			currentBoard.set_square_value(emptySquare.row, emptySquare.col, 0);
-			currentBoard.setFailed(false);
+			currentBoard->set_square_value(emptySquare.row, emptySquare.col, 0);
+			currentBoard->setFailed(false);
 		}
 	}
-	currentBoard.setFailed(true);
-	return currentBoard;
+	currentBoard->setFailed(true);
+	return;
 }
 
-Board backTrackingSearch(Board initialBoard)
+void backTrackingSearch(Board *initialBoard)
 {
 	return recursiveBackTrackingSearch(initialBoard);
 }
@@ -266,7 +266,7 @@ Board backTrackingSearch(Board initialBoard)
 int main(int argc, char* argv[])
 {
 	Board *easyBoard_4x4 = Board::fromFile("4x4.sudoku");
-	*easyBoard_4x4 = backTrackingSearch(*easyBoard_4x4);
+	backTrackingSearch(easyBoard_4x4);
 	if (easyBoard_4x4->checkForVictory())
 		cout << "Victory!\n";
 	else
