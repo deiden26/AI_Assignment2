@@ -156,43 +156,58 @@ bool Board::checkForVictory() {
 }
 rowCol Board::findEmptySquare()
 {
+	/* Search every element of the board  until	*/
+	/* an element is found with value == 0		*/
 	for(int i=1; i<dim+1;i++)
-	for(int j=1;j <dim+1;j++)
-		if(this->get_square_value(i,j)==0)
-			return rowCol(i, j);
+	{
+		for(int j=1;j <dim+1;j++)
+		{
+			if(this->get_square_value(i,j)==0)
+			{
+				return rowCol(i, j);
+			}
+		}
+	}
+	/* returning [0,0] signifies that no	*/
+	/* free square was found				*/
 	return rowCol(0, 0);
 }
 
-bool Board::isValidMove(rowCol position, int value)
+bool Board::isValidMove(rowCol position, int newValue)
 {
 	for (int i=1; i<dim+1 ;i++)
 	{
-		/* Check column */
-		if (this->get_square_value(i, position.col) == value)
+		/* Check column for any square with value == newValue */
+		if (this->get_square_value(i, position.col) == newValue)
 		{
 			return false;
 		}
-		/* Check row */
-		if (this->get_square_value(position.row, i) == value)
+		/* Check row for any square with value == newValue */
+		if (this->get_square_value(position.row, i) == newValue)
 		{
 			return false;
 		}
 	}
 
+	/* Get the dimension of the subBoard */
 	int dimsqrt = (int)(sqrt((double)dim));
-	int squareRow = ceil((float)position.row/(float)dimsqrt)-1;
-	int squareCol = ceil((float)position.col/(float)dimsqrt)-1;
+	/* Get the row and column of the subBoard (zero indexed) */
+	int subBoardRow = ceil((float)position.row/(float)dimsqrt)-1;
+	int subBoardCol = ceil((float)position.col/(float)dimsqrt)-1;
 
+	/* Check subBoard for any square with value == newValue */
 	for(int k=1; k<dimsqrt+1;k++)
 	{
 		for(int m=1; m<dimsqrt+1;m++)
 		{
-			if (this->get_square_value(squareRow*dimsqrt+k, squareCol*dimsqrt+m) == value)
+			if (this->get_square_value(subBoardRow*dimsqrt+k, subBoardCol*dimsqrt+m) == newValue)
 			{
 				return false;
 			}
 		}
 	}
+	/* If no important squares have been found	*/
+	/* with value == newValue, return true	 	*/
 	return true;
 }
 
@@ -204,24 +219,37 @@ void Board::setFailed(bool state)
 
 void Board::printBoard()
 {
+	/* Print top, horizontal line of the board */
 	cout << endl << endl;
 	for (int k=0; k<dim*10; k++)
 	{
 		cout << "-";
 	}
 	cout << endl;
+
 	int dimsqrt = (int)(sqrt((double)dim)); 
+
+	/* Print the numbers of the board by row */
 	for(int i=1; i<dim+1;i++)
 	{
 		for(int j=1; j<dim+1; j++)
 		{
-			cout << this->get_square_value(i, j) <<  "\t";
+			if (this->get_square_value(i, j) == 0)
+			{
+				cout << "_\t";
+			}
+			else
+			{
+				cout << this->get_square_value(i, j) <<  "\t";
+			}
+			/* print vertical lines of the board*/
 			if (j % dimsqrt == 0)
 			{
 				cout << "|\t";
 			}
 		}
 		cout << endl;
+		/* Print the horizontal lines of the board */
 		if (i % dimsqrt == 0)
 		{
 			for (int k=0; k<dim*10; k++)
@@ -241,24 +269,31 @@ void Board::printBoard()
 void recursiveBackTrackingSearch(Board *currentBoard)
 {
 	//currentBoard->printBoard(); //See board at every recursion
+	/* Find a square to attempt to fill */
 	rowCol emptySquare = currentBoard->findEmptySquare();
+	/* If there isn't a free square, the search is complete */
 	if (emptySquare.row == 0)
 		return;
+	/* Try all possible values for the given free square */
 	for (int i=1; i<currentBoard->get_dim()+1; i++)
 	{
 		//cout << i << " "; //See each attempted input
 		if (currentBoard->isValidMove(emptySquare,i))
 		{
+			/* If you find a number that is allowed, fill it in and recurse */
 			currentBoard->set_square_value(emptySquare.row, emptySquare.col, i);
 			recursiveBackTrackingSearch(currentBoard);
+
 			if(!(currentBoard->hasFailed()))
 			{
 				return;
 			}
+			/* If the search failed, erase value and attempt with different value */
 			currentBoard->set_square_value(emptySquare.row, emptySquare.col, 0);
 			currentBoard->setFailed(false);
 		}
 	}
+	/* Fail if there isn't a valid number to put in the selected free square */
 	currentBoard->setFailed(true);
 	return;
 }
@@ -273,8 +308,9 @@ void backTrackingSearch(Board *initialBoard)
 
 int main(int argc, char* argv[])
 {
-	/* 4x4 board */
+	/*~~~~ 4x4 board ~~~~*/
 	Board *inputBoard_4x4 = Board::fromFile("4x4.sudoku");
+
 	inputBoard_4x4->printBoard();
 	backTrackingSearch(inputBoard_4x4);
 	inputBoard_4x4->printBoard();
@@ -284,8 +320,9 @@ int main(int argc, char* argv[])
 	else
 		cout << "Defeat\n";
 
-	/* 9x9 board */
+	/*~~~~ 9x9 board ~~~~*/
 	Board *inputBoard_9x9 = Board::fromFile("9x9.sudoku");
+
 	inputBoard_9x9->printBoard();
 	backTrackingSearch(inputBoard_9x9);
 	inputBoard_9x9->printBoard();
@@ -295,8 +332,9 @@ int main(int argc, char* argv[])
 	else
 		cout << "Defeat\n";
 
-	/* 16x16 board */
+	/*~~~~ 16x16 board ~~~~*/
 	Board *inputBoard_16x16 = Board::fromFile("16x16.sudoku");
+
 	inputBoard_16x16->printBoard();
 	backTrackingSearch(inputBoard_16x16);
 	inputBoard_16x16->printBoard();
@@ -306,8 +344,9 @@ int main(int argc, char* argv[])
 	else
 		cout << "Defeat\n";
 
-	/* 25x25 board */
+	/*~~~~ 25x25 board ~~~~*/
 	Board *inputBoard_25x25 = Board::fromFile("25x25.sudoku");
+
 	inputBoard_25x25->printBoard();
 	backTrackingSearch(inputBoard_25x25);
 	inputBoard_25x25->printBoard();
