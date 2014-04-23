@@ -1,12 +1,13 @@
 // Sudoku.cpp : Basic class for holding a Sudoku board, reading a board from files, a writing a board to the screen
 //
 
-#include<iostream>
-#include<fstream>
-#include<sstream>
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+#include <sstream>
 
-#include<string>
-#include<math.h>
+#include <string>
+#include <math.h>
 
 using namespace std;
 
@@ -221,7 +222,7 @@ void Board::printBoard()
 {
 	/* Print top, horizontal line of the board */
 	cout << endl << endl;
-	for (int k=0; k<dim*10; k++)
+	for (int k=0; k<dim*5; k++)
 	{
 		cout << "-";
 	}
@@ -236,23 +237,27 @@ void Board::printBoard()
 		{
 			if (this->get_square_value(i, j) == 0)
 			{
-				cout << "_\t";
+				cout << "_" << setw(4);
 			}
 			else
 			{
-				cout << this->get_square_value(i, j) <<  "\t";
+				cout << this->get_square_value(i, j) << setw(4);
 			}
 			/* print vertical lines of the board*/
 			if (j % dimsqrt == 0)
 			{
-				cout << "|\t";
+				cout << "|";
+				if (j != dim)
+				{
+					cout << setw(4);
+				}
 			}
 		}
 		cout << endl;
 		/* Print the horizontal lines of the board */
 		if (i % dimsqrt == 0)
 		{
-			for (int k=0; k<dim*10; k++)
+			for (int k=0; k<dim*5; k++)
 			{
 				cout << "-";
 			}
@@ -281,7 +286,7 @@ int recursiveBackTrackingSearch(Board *currentBoard, int consistencyCount)
 		if (currentBoard->isValidMove(emptySquare,i))
 		{
 			consistencyCount++;
-			if (consistencyCount > 1000000)
+			if (consistencyCount > 10000000)
 			{
 				return consistencyCount;
 			}
