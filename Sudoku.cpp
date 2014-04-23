@@ -119,7 +119,6 @@ Board * Board::fromFile(string inFileName) {
 }
 
 bool Board::checkForVictory() {
-	cout << "Checking for victory\n";
 	unsigned long victory = 0;
 	//optimization: check if it's filled:
 	for(int i=1; i<dim+1;i++)
@@ -205,16 +204,34 @@ void Board::setFailed(bool state)
 
 void Board::printBoard()
 {
-	cout << "\n-----------------\n";
+	cout << endl << endl;
+	for (int k=0; k<dim*10; k++)
+	{
+		cout << "-";
+	}
+	cout << endl;
+	int dimsqrt = (int)(sqrt((double)dim)); 
 	for(int i=1; i<dim+1;i++)
 	{
 		for(int j=1; j<dim+1; j++)
 		{
-			cout << this->get_square_value(i, j) <<  " ";
+			cout << this->get_square_value(i, j) <<  "\t";
+			if (j % dimsqrt == 0)
+			{
+				cout << "|\t";
+			}
 		}
 		cout << endl;
+		if (i % dimsqrt == 0)
+		{
+			for (int k=0; k<dim*10; k++)
+			{
+				cout << "-";
+			}
+			cout << endl;
+		}
 	}
-	cout << "-----------------\n";
+	return;
 }
 
 
