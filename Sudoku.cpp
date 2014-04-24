@@ -286,7 +286,7 @@ int recursiveBackTrackingSearch(Board *currentBoard, int consistencyCount)
 		if (currentBoard->isValidMove(emptySquare,i))
 		{
 			consistencyCount++;
-			if (consistencyCount > 10000000)
+			if (consistencyCount >= 2000000)
 			{
 				return consistencyCount;
 			}
@@ -366,11 +366,15 @@ int main(int argc, char* argv[])
 	else
 		cout << "Defeat\n";
 
-	cout << "Problem\t" << "| " << "BackTracking\t" << endl;
-	cout << "4x4\t" << "| " << numberOfConsistencyChecks_4x4 << endl; 
-	cout << "9x9\t" << "| " << numberOfConsistencyChecks_9x9 << endl;
-	cout << "16x16\t" << "| " << numberOfConsistencyChecks_16x16 << endl;
-	cout << "25x25\t" << "| " << numberOfConsistencyChecks_25x25 << endl; 
+	/*~~~ Performance Table ~~~*/
+	cout << "\n-----------------------------\n";
+	cout << "| "  << "Problem" << setw(4) << "| " << "BackTracking" << setw(4) << "|" <<  endl;
+	cout << "| ------------------------- |\n";
+	cout << "| " << "4x4" << setw(8) << "| " << numberOfConsistencyChecks_4x4 << setw(14) << "|" << endl; 
+	cout << "| " << "9x9" << setw(8) << "| " << numberOfConsistencyChecks_9x9 << setw(11) << "|" << endl;
+	cout << "| " << "16x16" << setw(6) << "| " << numberOfConsistencyChecks_16x16 << setw(9) << "|" << endl;
+	cout << "| " << "25x25" << setw(6) << "| " << numberOfConsistencyChecks_25x25 << setw(9) << "|" << endl;
+	cout << endl;
 
 	return 1;
 }
