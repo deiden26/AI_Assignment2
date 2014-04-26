@@ -49,6 +49,8 @@ public:
 	bool hasFailed() {return failed;}
 	void setFailed(bool state);
 	void printBoard();
+	int numberOfConstraints(rowCol position);
+	rowCol mostConstrainedFreeSquare();
 };
 
 Board::Board(int d) {
@@ -267,6 +269,67 @@ void Board::printBoard()
 	return;
 }
 
+int Board::numberOfConstraints(rowCol position)
+{
+	int constrants[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+	int constrantCount = 0;
+
+	for (int i=1; i<dim+1 ;i++)
+	{
+		/* Check column for any square with value != 0 */
+		if (this->get_square_value(i, position.col) != 0)
+		{
+			constrants[this->get_square_value(i, position.col) -1] = 1;
+		}
+		/* Check row for any square with value != 0 */
+		if (this->get_square_value(position.row, i) != 0)
+		{
+			constrants[this->get_square_value(position.row, i) -1] = 1;
+		}
+	}
+
+	/* Get the dimension of the subBoard */
+	int dimsqrt = (int)(sqrt((double)dim));
+	/* Get the row and column of the subBoard (zero indexed) */
+	int subBoardRow = ceil((float)position.row/(float)dimsqrt)-1;
+	int subBoardCol = ceil((float)position.col/(float)dimsqrt)-1;
+
+	/* Check subBoard for any square with value != 0 */
+	for(int k=1; k<dimsqrt+1;k++)
+	{
+		for(int m=1; m<dimsqrt+1;m++)
+		{
+			if (this->get_square_value(subBoardRow*dimsqrt+k, subBoardCol*dimsqrt+m) != 0)
+			{
+				constrants[this->get_square_value(subBoardRow*dimsqrt+k, subBoardCol*dimsqrt+m) -1] = 1;
+			}
+		}
+	}
+
+	/* Sum Constraints */
+	for (int i=0; i < 9; i++)
+	{
+		constrantCount += constrants[i];
+	}
+
+
+}
+
+rowCol Board::mostConstrainedFreeSquare()
+{
+	/* Search every element of the board  until	*/
+	/* an element is found with value == 0		*/
+	for(int i=1; i<dim+1;i++)
+	{
+		for(int j=1;j <dim+1;j++)
+		{
+			this->numberOfConstraints(rowCol(i,j));
+		}
+	}
+	/* returning [0,0] signifies that no	*/
+	/* free square was found				*/
+	return rowCol(0, 0);
+}
 
 /*###### BackTracking Search ######*/
 
