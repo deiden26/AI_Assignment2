@@ -500,7 +500,7 @@ int backTrackingSearch(Board *initialBoard)
 
 /*###### BackTracking Search W/ MRV ######*/
 
-int recursiveBackTrackingSearchMRV(Board *currentBoard, int consistencyCount)
+int recursiveBackTrackingSearchMrvMcv(Board *currentBoard, int consistencyCount)
 {
 	//currentBoard->printBoard(); //See board at every recursion
 	/* Find a square to attempt to fill */
@@ -521,7 +521,7 @@ int recursiveBackTrackingSearchMRV(Board *currentBoard, int consistencyCount)
 		{
 			/* If you find a number that is allowed, fill it in and recurse */
 			currentBoard->set_square_value(emptySquare.row, emptySquare.col, i);
-			consistencyCount = recursiveBackTrackingSearchMRV(currentBoard, consistencyCount);
+			consistencyCount = recursiveBackTrackingSearchMrvMcv(currentBoard, consistencyCount);
 
 			if(!(currentBoard->hasFailed()))
 			{
@@ -537,9 +537,9 @@ int recursiveBackTrackingSearchMRV(Board *currentBoard, int consistencyCount)
 	return consistencyCount;
 }
 
-int backTrackingSearchMRV(Board *initialBoard)
+int backTrackingSearchMrvMcv(Board *initialBoard)
 {
-	int numberOfConsistencyChecks = recursiveBackTrackingSearchMRV(initialBoard, 0);
+	int numberOfConsistencyChecks = recursiveBackTrackingSearchMrvMcv(initialBoard, 0);
 	return numberOfConsistencyChecks;
 }
 
@@ -558,11 +558,11 @@ int main(int argc, char* argv[])
 	else
 		cout << "Defeat\n";
 
-	/*~~~~ 4x4 board MRV BackTracking ~~~~*/
+	/*~~~~ 4x4 board MRV+MCV BackTracking ~~~~*/
 	inputBoard_4x4 = Board::fromFile("4x4.sudoku");
 
-	cout << "4x4 Board MRV BackTracking\n";
-	int numberOfConsistencyChecks_4x4_MRV = backTrackingSearchMRV(inputBoard_4x4);
+	cout << "4x4 Board MRV+MCV BackTracking\n";
+	int numberOfConsistencyChecks_4x4_MRV = backTrackingSearchMrvMcv(inputBoard_4x4);
 	
 	if (inputBoard_4x4->checkForVictory())
 		cout << "Victory!\n";
@@ -580,11 +580,11 @@ int main(int argc, char* argv[])
 	else
 		cout << "Defeat\n";
 
-	/*~~~~ 9x9 board MRV BackTracking ~~~~*/
+	/*~~~~ 9x9 board MRV+MCV BackTracking ~~~~*/
 	inputBoard_9x9 = Board::fromFile("9x9.sudoku");
 
-	cout << "9x9 Board MRV BackTracking\n";
-	int numberOfConsistencyChecks_9x9_MRV = backTrackingSearchMRV(inputBoard_9x9);
+	cout << "9x9 Board MRV+MCV BackTracking\n";
+	int numberOfConsistencyChecks_9x9_MRV = backTrackingSearchMrvMcv(inputBoard_9x9);
 	
 	if (inputBoard_9x9->checkForVictory())
 		cout << "Victory!\n";
@@ -602,11 +602,11 @@ int main(int argc, char* argv[])
 	else
 		cout << "Defeat\n";
 
-	/*~~~~ 16x16 board MRV BackTracking ~~~~*/
+	/*~~~~ 16x16 board MRV+MCV BackTracking ~~~~*/
 	inputBoard_16x16 = Board::fromFile("16x16.sudoku");
 
-	cout << "16x16 Board MRV BackTracking\n";
-	int numberOfConsistencyChecks_16x16_MRV = backTrackingSearchMRV(inputBoard_16x16);
+	cout << "16x16 Board MRV+MCV BackTracking\n";
+	int numberOfConsistencyChecks_16x16_MRV = backTrackingSearchMrvMcv(inputBoard_16x16);
 	
 	if (inputBoard_16x16->checkForVictory())
 		cout << "Victory!\n";
@@ -624,11 +624,11 @@ int main(int argc, char* argv[])
 	else
 		cout << "Defeat\n";
 
-	/*~~~~ 25x25 board MRV BackTracking ~~~~*/
+	/*~~~~ 25x25 board MRV+MCV BackTracking ~~~~*/
 	inputBoard_25x25 = Board::fromFile("25x25.sudoku");
 
-	cout << "25x25 Board MRV BackTracking\n";
-	int numberOfConsistencyChecks_25x25_MRV = backTrackingSearchMRV(inputBoard_25x25);
+	cout << "25x25 Board MRV+MCV BackTracking\n";
+	int numberOfConsistencyChecks_25x25_MRV = backTrackingSearchMrvMcv(inputBoard_25x25);
 	
 	if (inputBoard_25x25->checkForVictory())
 		cout << "Victory!\n";
@@ -637,17 +637,17 @@ int main(int argc, char* argv[])
 
 	/*~~~ Performance Table ~~~*/
 	cout << "\n-----------------------------------------\n";
-	cout << "| "  << "Problem" << setw(4) << "| " << "BackTracking" << setw(4) << "|" << " MRV" << setw (8) << "|" << endl;
+	cout << "| "  << "Problem" << setw(4) << "| " << "BackTracking" << setw(4) << "|" << " MRV + MCV" << setw (2) << "|" << endl;
 	cout << "| ------------------------------------- |\n";
 	/* 4x4 Row */
 	cout << "| " << "4x4" << setw(8) << "| " << numberOfConsistencyChecks_4x4 << setw(14) << "| ";
 	cout << numberOfConsistencyChecks_4x4_MRV << setw(9) << "|" << endl;
 	/* 9x9 Row */
 	cout << "| " << "9x9" << setw(8) << "| " << numberOfConsistencyChecks_9x9 << setw(11) << "| ";
-	cout << numberOfConsistencyChecks_9x9_MRV << setw(7) << "|" << endl;
+	cout << numberOfConsistencyChecks_9x9_MRV << setw(8) << "|" << endl;
 	/* 16x16 Row */
 	cout << "| " << "16x16" << setw(6) << "| " << numberOfConsistencyChecks_16x16 << setw(10) << "| ";
-	cout << numberOfConsistencyChecks_16x16_MRV << setw(4) << "|" << endl;
+	cout << numberOfConsistencyChecks_16x16_MRV << setw(5) << "|" << endl;
 	/* 25x25 Row */
 	cout << "| " << "25x25" << setw(6) << "| " << numberOfConsistencyChecks_25x25 << setw(10) << "| ";
 	cout << numberOfConsistencyChecks_25x25_MRV << setw(4) << "|" << endl;
