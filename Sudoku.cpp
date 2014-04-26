@@ -335,13 +335,11 @@ rowCol Board::mostConstrainedFreeSquare()
 			int currentConstraints = this->numberOfConstraints(rowCol(i,j));
 			/* If the number of contraints == dim for any square, there is no valid move for it */
 			/* Not allowing this quare to be returned will prevent backtracking */
-			/*
 			if (currentConstraints == dim)
 			{
-				cout << "wtf\n";
-				continue;
+				mostConstrained = rowCol(i,j);
+				return mostConstrained;
 			}
-			*/
 			if (currentConstraints > maxConstraints)
 			{
 				maxConstraints = currentConstraints;
@@ -463,7 +461,7 @@ int recursiveBackTrackingSearch(Board *currentBoard, int consistencyCount)
 	for (int i=1; i<currentBoard->get_dim()+1; i++)
 	{
 		consistencyCount++;
-		if (consistencyCount >= 100000000)
+		if (consistencyCount >= 2000000)
 		{
 			return consistencyCount;
 		}
@@ -508,7 +506,7 @@ int recursiveBackTrackingSearchMRV(Board *currentBoard, int consistencyCount)
 	for (int i=1; i<currentBoard->get_dim()+1; i++)
 	{
 		consistencyCount++;
-		if (consistencyCount >= 100000000)
+		if (consistencyCount >= 2000000)
 		{
 			return consistencyCount;
 		}
