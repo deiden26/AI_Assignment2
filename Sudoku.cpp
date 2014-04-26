@@ -403,7 +403,7 @@ int Board::numberOfConstraining(rowCol position)
   return constrainingCount;
 }
 
-rowCol MRVandMCV()
+rowCol Board::MRVandMCV()
 /* Chooses minimum remaining value square of the board.
  * Ties are broken using the constraining variable count */
 {
@@ -430,8 +430,8 @@ rowCol MRVandMCV()
       }
       if (currentConstraints == maxConstraints) {
         // break the tie!
-        mostConstrainedConstraining = numberOfConstraining(mostConstrained);
-        currentConstraining = numberOfConstraining(current);
+        int mostConstrainedConstraining = numberOfConstraining(mostConstrained);
+        int currentConstraining = numberOfConstraining(current);
         if (mostConstrainedConstraining < currentConstraining) {
            // then replace 
            mostConstrained = current;
