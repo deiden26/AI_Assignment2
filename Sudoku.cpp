@@ -275,7 +275,7 @@ int Board::numberOfConstraints(rowCol position)
 {
   // need to make this a variable sized array depending on size of board
 	int constraints[dim];
-  memset(constraints, 0, dim * sizeof(int));
+ 	memset(constraints, 0, dim * sizeof(int));
 	int constraintCount = 0;
 
 	for (int i=1; i<dim+1 ;i++)
@@ -327,20 +327,26 @@ rowCol Board::mostConstrainedFreeSquare()
 	{
 		for(int j=1; j < dim+1;j++)
 		{
-      if (this->get_square_value(i, j) != 0) {
-          // skip squares that are already filled
-          continue;
-      }
+      		if (this->get_square_value(i, j) != 0)
+      		{
+          		// skip squares that are already filled
+          		continue;
+      		}
 			int currentConstraints = this->numberOfConstraints(rowCol(i,j));
-      if (currentConstraints >= dim) {
-          // this is just a sanity check to make sure
-          // the number of constraints are reasonable
-          continue;
-      }
-      if (currentConstraints > maxConstraints) {
-        maxConstraints = currentConstraints;
-        mostConstrained = rowCol(i,j);
-      }
+			/* If the number of contraints == dim for any square, there is no valid move for it */
+			/* Not allowing this quare to be returned will prevent backtracking */
+			/*
+			if (currentConstraints == dim)
+			{
+				cout << "wtf\n";
+				continue;
+			}
+			*/
+			if (currentConstraints > maxConstraints)
+			{
+				maxConstraints = currentConstraints;
+				mostConstrained = rowCol(i,j);
+			}
 		}
 	}
 	/* returning [0,0] signifies that no	*/
@@ -456,14 +462,14 @@ int recursiveBackTrackingSearch(Board *currentBoard, int consistencyCount)
 	/* Try all possible values for the given free square */
 	for (int i=1; i<currentBoard->get_dim()+1; i++)
 	{
+		consistencyCount++;
+		if (consistencyCount >= 100000000)
+		{
+			return consistencyCount;
+		}
 		//cout << i << " "; //See each attempted input
 		if (currentBoard->isValidMove(emptySquare,i))
 		{
-			consistencyCount++;
-			if (consistencyCount >= 2000000)
-			{
-				return consistencyCount;
-			}
 			/* If you find a number that is allowed, fill it in and recurse */
 			currentBoard->set_square_value(emptySquare.row, emptySquare.col, i);
 			consistencyCount = recursiveBackTrackingSearch(currentBoard, consistencyCount);
@@ -488,19 +494,72 @@ int backTrackingSearch(Board *initialBoard)
 	return numberOfConsistencyChecks;
 }
 
+/*###### BackTracking Search W/ MRV ######*/
+
+int recursiveBackTrackingSearchMRV(Board *currentBoard, int consistencyCount)
+{
+	//currentBoard->printBoard(); //See board at every recursion
+	/* Find a square to attempt to fill */
+	rowCol emptySquare = currentBoard->mostConstrainedFreeSquare();
+	/* If there isn't a free square, the search is complete */
+	if (emptySquare.row == 0)
+		return consistencyCount;
+	/* Try all possible values for the given free square */
+	for (int i=1; i<currentBoard->get_dim()+1; i++)
+	{
+		consistencyCount++;
+		if (consistencyCount >= 100000000)
+		{
+			return consistencyCount;
+		}
+		//cout << i << " "; //See each attempted input
+		if (currentBoard->isValidMove(emptySquare,i))
+		{
+			/* If you find a number that is allowed, fill it in and recurse */
+			currentBoard->set_square_value(emptySquare.row, emptySquare.col, i);
+			consistencyCount = recursiveBackTrackingSearchMRV(currentBoard, consistencyCount);
+
+			if(!(currentBoard->hasFailed()))
+			{
+				return consistencyCount;
+			}
+			/* If the search failed, erase value and attempt with different value */
+			currentBoard->set_square_value(emptySquare.row, emptySquare.col, 0);
+			currentBoard->setFailed(false);
+		}
+	}
+	/* Fail if there isn't a valid number to put in the selected free square */
+	currentBoard->setFailed(true);
+	return consistencyCount;
+}
+
+int backTrackingSearchMRV(Board *initialBoard)
+{
+	int numberOfConsistencyChecks = recursiveBackTrackingSearchMRV(initialBoard, 0);
+	return numberOfConsistencyChecks;
+}
+
 /*###### main Function ######*/
 
 int main(int argc, char* argv[])
 {
-	/*~~~~ 4x4 board ~~~~*/
+	/*~~~~ 4x4 board BackTracking ~~~~*/
 	Board *inputBoard_4x4 = Board::fromFile("4x4.sudoku");
 
-	inputBoard_4x4->printBoard();
-	rowCol testMostConstrained = inputBoard_4x4->mostConstrainedFreeSquare();
-  cout << testMostConstrained.row << testMostConstrained.col << "\n";
-  int numberOfConsistencyChecks_4x4 = backTrackingSearch(inputBoard_4x4);
-	inputBoard_4x4->printBoard();
- 
+	cout << "4x4 Board BackTracking\n";
+	int numberOfConsistencyChecks_4x4 = backTrackingSearch(inputBoard_4x4);
+
+	if (inputBoard_4x4->checkForVictory())
+		cout << "Victory!\n";
+	else
+		cout << "Defeat\n";
+
+	/*~~~~ 4x4 board MRV BackTracking ~~~~*/
+	inputBoard_4x4 = Board::fromFile("4x4.sudoku");
+
+	cout << "4x4 Board MRV BackTracking\n";
+	int numberOfConsistencyChecks_4x4_MRV = backTrackingSearchMRV(inputBoard_4x4);
+	
 	if (inputBoard_4x4->checkForVictory())
 		cout << "Victory!\n";
 	else
@@ -509,10 +568,20 @@ int main(int argc, char* argv[])
 	/*~~~~ 9x9 board ~~~~*/
 	Board *inputBoard_9x9 = Board::fromFile("9x9.sudoku");
 
-	inputBoard_9x9->printBoard();
+	cout << "9x9 Board BackTracking\n";
 	int numberOfConsistencyChecks_9x9 = backTrackingSearch(inputBoard_9x9);
-	inputBoard_9x9->printBoard();
 
+	if (inputBoard_9x9->checkForVictory())
+		cout << "Victory!\n";
+	else
+		cout << "Defeat\n";
+
+	/*~~~~ 9x9 board MRV BackTracking ~~~~*/
+	inputBoard_9x9 = Board::fromFile("9x9.sudoku");
+
+	cout << "9x9 Board MRV BackTracking\n";
+	int numberOfConsistencyChecks_9x9_MRV = backTrackingSearchMRV(inputBoard_9x9);
+	
 	if (inputBoard_9x9->checkForVictory())
 		cout << "Victory!\n";
 	else
@@ -521,10 +590,20 @@ int main(int argc, char* argv[])
 	/*~~~~ 16x16 board ~~~~*/
 	Board *inputBoard_16x16 = Board::fromFile("16x16.sudoku");
 
-	inputBoard_16x16->printBoard();
+	cout << "16x16 Board BackTracking\n";
 	int numberOfConsistencyChecks_16x16 = backTrackingSearch(inputBoard_16x16);
-	inputBoard_16x16->printBoard();
 
+	if (inputBoard_16x16->checkForVictory())
+		cout << "Victory!\n";
+	else
+		cout << "Defeat\n";
+
+	/*~~~~ 16x16 board MRV BackTracking ~~~~*/
+	inputBoard_16x16 = Board::fromFile("16x16.sudoku");
+
+	cout << "16x16 Board MRV BackTracking\n";
+	int numberOfConsistencyChecks_16x16_MRV = backTrackingSearchMRV(inputBoard_16x16);
+	
 	if (inputBoard_16x16->checkForVictory())
 		cout << "Victory!\n";
 	else
@@ -533,10 +612,20 @@ int main(int argc, char* argv[])
 	/*~~~~ 25x25 board ~~~~*/
 	Board *inputBoard_25x25 = Board::fromFile("25x25.sudoku");
 
-	inputBoard_25x25->printBoard();
+	cout << "25x25 Board BackTracking\n";
 	int numberOfConsistencyChecks_25x25 = backTrackingSearch(inputBoard_25x25);
-	inputBoard_25x25->printBoard();
 
+	if (inputBoard_25x25->checkForVictory())
+		cout << "Victory!\n";
+	else
+		cout << "Defeat\n";
+
+	/*~~~~ 25x25 board MRV BackTracking ~~~~*/
+	inputBoard_25x25 = Board::fromFile("25x25.sudoku");
+
+	cout << "25x25 Board MRV BackTracking\n";
+	int numberOfConsistencyChecks_25x25_MRV = backTrackingSearchMRV(inputBoard_25x25);
+	
 	if (inputBoard_25x25->checkForVictory())
 		cout << "Victory!\n";
 	else
@@ -544,12 +633,20 @@ int main(int argc, char* argv[])
 
 	/*~~~ Performance Table ~~~*/
 	cout << "\n-----------------------------\n";
-	cout << "| "  << "Problem" << setw(4) << "| " << "BackTracking" << setw(4) << "|" <<  endl;
+	cout << "| "  << "Problem" << setw(4) << "| " << "BackTracking" << setw(4) << "|" << " MRV" << setw (8) << "|" << endl;
 	cout << "| ------------------------- |\n";
-	cout << "| " << "4x4" << setw(8) << "| " << numberOfConsistencyChecks_4x4 << setw(14) << "|" << endl; 
-	cout << "| " << "9x9" << setw(8) << "| " << numberOfConsistencyChecks_9x9 << setw(11) << "|" << endl;
-	cout << "| " << "16x16" << setw(6) << "| " << numberOfConsistencyChecks_16x16 << setw(9) << "|" << endl;
-	cout << "| " << "25x25" << setw(6) << "| " << numberOfConsistencyChecks_25x25 << setw(9) << "|" << endl;
+	/* 4x4 Row */
+	cout << "| " << "4x4" << setw(8) << "| " << numberOfConsistencyChecks_4x4 << setw(14) << "| ";
+	cout << numberOfConsistencyChecks_4x4_MRV << setw(11) << "|" << endl;
+	/* 9x9 Row */
+	cout << "| " << "9x9" << setw(8) << "| " << numberOfConsistencyChecks_9x9 << setw(11) << "| ";
+	cout << numberOfConsistencyChecks_9x9_MRV << setw(8) << "|" << endl;
+	/* 16x16 Row */
+	cout << "| " << "16x16" << setw(6) << "| " << numberOfConsistencyChecks_16x16 << setw(8) << "| ";
+	cout << numberOfConsistencyChecks_16x16_MRV << setw(6) << "|" << endl;
+	/* 25x25 Row */
+	cout << "| " << "25x25" << setw(6) << "| " << numberOfConsistencyChecks_25x25 << setw(8) << "| ";
+	cout << numberOfConsistencyChecks_25x25_MRV << setw(6) << "|" << endl;
 	cout << endl;
 
 	return 1;
