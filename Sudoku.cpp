@@ -51,6 +51,8 @@ public:
 	void printBoard();
 	int numberOfConstraints(rowCol position);
 	rowCol mostConstrainedFreeSquare();
+  int numberOfConstraining( rowCol position);
+  rowCol MRVandMCV();
 };
 
 Board::Board(int d) {
@@ -271,20 +273,24 @@ void Board::printBoard()
 
 int Board::numberOfConstraints(rowCol position)
 {
-	int constrants[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-	int constrantCount = 0;
+  /* Apparently, setting the first element of an array 
+     implicitly sets the rest of the array to 0 values
+     since it's initialized. Learn something new every day!*/
+	int constraints[dim];
+  memset(constraints, 0, dim * sizeof(int));
+	int constraintCount = 0;
 
 	for (int i=1; i<dim+1 ;i++)
 	{
 		/* Check column for any square with value != 0 */
 		if (this->get_square_value(i, position.col) != 0)
 		{
-			constrants[this->get_square_value(i, position.col) -1] = 1;
+			constraints[this->get_square_value(i, position.col) -1] = 1;
 		}
 		/* Check row for any square with value != 0 */
 		if (this->get_square_value(position.row, i) != 0)
 		{
-			constrants[this->get_square_value(position.row, i) -1] = 1;
+			constraints[this->get_square_value(position.row, i) -1] = 1;
 		}
 	}
 
@@ -301,34 +307,141 @@ int Board::numberOfConstraints(rowCol position)
 		{
 			if (this->get_square_value(subBoardRow*dimsqrt+k, subBoardCol*dimsqrt+m) != 0)
 			{
-				constrants[this->get_square_value(subBoardRow*dimsqrt+k, subBoardCol*dimsqrt+m) -1] = 1;
+				constraints[this->get_square_value(subBoardRow*dimsqrt+k, subBoardCol*dimsqrt+m) -1] = 1;
 			}
 		}
 	}
 
 	/* Sum Constraints */
-	for (int i=0; i < 9; i++)
+	for (int i=0; i < dim; i++)
 	{
-		constrantCount += constrants[i];
+		constraintCount += constraints[i];
 	}
-
+  return constraintCount;
 
 }
 
 rowCol Board::mostConstrainedFreeSquare()
 {
-	/* Search every element of the board  until	*/
-	/* an element is found with value == 0		*/
-	for(int i=1; i<dim+1;i++)
+  rowCol mostConstrained = rowCol(0, 0);
+  int maxConstraints = 0;
+	for(int i=1; i < dim+1;i++)
 	{
-		for(int j=1;j <dim+1;j++)
+		for(int j=1; j < dim+1;j++)
 		{
-			this->numberOfConstraints(rowCol(i,j));
+      if (this->get_square_value(i, j) != 0) {
+          // skip squares that are already filled
+          continue;
+      }
+			int currentConstraints = this->numberOfConstraints(rowCol(i,j));
+      if (currentConstraints >= dim) {
+          // this is just a sanity check to make sure
+          // the number of constraints are reasonable
+          continue;
+      }
+      if (currentConstraints > maxConstraints) {
+        maxConstraints = currentConstraints;
+        mostConstrained = rowCol(i,j);
+      }
 		}
 	}
 	/* returning [0,0] signifies that no	*/
 	/* free square was found				*/
-	return rowCol(0, 0);
+	return mostConstrained;
+}
+
+int Board::numberOfConstraining(rowCol position)
+{
+  /* For each square, there are up to 
+   * 2 * (dim - 1) + (dim - 1) * (dim - 1) free squares
+   * that it could impose a constraint on upon assignment.
+   * How many free squares are in the constraint scope of 
+   * this square? */
+
+  //int constraining[possibleFreeInScope];
+  //memset(constraining, 0, possibleFreeInScope * sizeof(int));
+
+	int constrainingCount = 0;
+
+	for (int i=1; i<dim+1 ;i++)
+	{
+		/* Check column for any square with value == 0 */
+		if (this->get_square_value(i, position.col) == 0)
+		{
+			constrainingCount += 1;
+		}
+		/* Check row for any square with value == 0 */
+		if (this->get_square_value(position.row, i) == 0)
+		{
+			constrainingCount += 1;
+		}
+	}
+
+	/* Get the dimension of the subBoard */
+	int dimsqrt = (int)(sqrt((double)dim));
+	/* Get the row and column of the subBoard (zero indexed) */
+	int subBoardRow = ceil((float)position.row/(float)dimsqrt)-1;
+	int subBoardCol = ceil((float)position.col/(float)dimsqrt)-1;
+
+	/* Check subBoard for any square with value == 0 */
+	for(int k=1; k<dimsqrt+1;k++)
+	{
+		for(int m=1; m<dimsqrt+1;m++)
+		{
+      // We don't want to double count any of the free squares that were already counted
+      // in the row and column
+      if ( subBoardRow * dimsqrt + k == position.row || subBoardCol * dimsqrt + m == position.col ) {
+        continue;
+      }
+			if (this->get_square_value(subBoardRow*dimsqrt+k, subBoardCol*dimsqrt+m) == 0)
+			{
+				constrainingCount += 1;
+			}
+		}
+	}
+
+  return constrainingCount;
+}
+
+rowCol MRVandMCV()
+/* Chooses minimum remaining value square of the board.
+ * Ties are broken using the constraining variable count */
+{
+  rowCol mostConstrained = rowCol(0, 0);
+  int maxConstraints = 0;
+	for(int i=1; i < dim+1;i++)
+	{
+		for(int j=1; j < dim+1;j++)
+		{
+      if (this->get_square_value(i, j) != 0) {
+          // skip squares that are already filled
+          continue;
+      }
+      rowCol current = rowCol(i, j);
+			int currentConstraints = this->numberOfConstraints(rowCol(i,j));
+      if (currentConstraints >= dim) {
+          // this is just a sanity check to make sure
+          // the number of constraints are reasonable
+          continue;
+      }
+      if (currentConstraints > maxConstraints) {
+        maxConstraints = currentConstraints;
+        mostConstrained = current;
+      }
+      if (currentConstraints == maxConstraints) {
+        // break the tie!
+        mostConstrainedConstraining = numberOfConstraining(mostConstrained);
+        currentConstraining = numberOfConstraining(current);
+        if (mostConstrainedConstraining < currentConstraining) {
+           // then replace 
+           mostConstrained = current;
+        }
+      }
+		}
+	}
+	/* returning [0,0] signifies that no	*/
+	/* free square was found				*/
+	return mostConstrained;
 }
 
 /*###### BackTracking Search ######*/
@@ -385,9 +498,11 @@ int main(int argc, char* argv[])
 	Board *inputBoard_4x4 = Board::fromFile("4x4.sudoku");
 
 	inputBoard_4x4->printBoard();
-	int numberOfConsistencyChecks_4x4 = backTrackingSearch(inputBoard_4x4);
+	rowCol testMostConstrained = inputBoard_4x4->mostConstrainedFreeSquare();
+  cout << testMostConstrained.row << testMostConstrained.col << "\n";
+  int numberOfConsistencyChecks_4x4 = backTrackingSearch(inputBoard_4x4);
 	inputBoard_4x4->printBoard();
-
+ 
 	if (inputBoard_4x4->checkForVictory())
 		cout << "Victory!\n";
 	else
