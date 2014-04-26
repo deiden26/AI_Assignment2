@@ -53,8 +53,9 @@ public:
 	void printBoard();
 	int numberOfConstraints(rowCol position);
 	rowCol mostConstrainedFreeSquare();
- 	int numberOfConstraining( rowCol position);
+ 	int numberOfConstraining(rowCol position);
 	rowCol mrvMcvFreeSquare();
+	int leastConstrainingValue(rowCol position);
 };
 
 Board::Board(int d) {
@@ -450,6 +451,10 @@ rowCol Board::mrvMcvFreeSquare()
 	/* returning [0,0] signifies that no	*/
 	/* free square was found				*/
 	return mostConstrained;
+}
+int Board::leastConstrainingValue(rowCol position)
+{
+	return 1;
 }
 
 /*###### BackTracking Search ######*/
