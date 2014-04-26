@@ -1,11 +1,13 @@
 // Sudoku.cpp : Basic class for holding a Sudoku board, reading a board from files, a writing a board to the screen
 //
 
+#include <stdlib.h>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
 #include <sstream>
 
+#include <cstring>
 #include <string>
 #include <math.h>
 
