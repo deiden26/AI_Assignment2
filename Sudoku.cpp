@@ -539,6 +539,49 @@ int backTrackingSearchMRV(Board *initialBoard)
 	return numberOfConsistencyChecks;
 }
 
+int recursiveBackTrackingSearchFCheck(Board *currentBoard, int consistencyCount)
+{
+	//currentBoard->printBoard(); //See board at every recursion
+	/* Find a square to attempt to fill */
+	rowCol emptySquare = currentBoard->findEmptySquare();
+	/* If there isn't a free square, the search is complete */
+	if (emptySquare.row == 0)
+		return consistencyCount;
+	/* Try all possible values for the given free square */
+	for (int i=1; i<currentBoard->get_dim()+1; i++)
+	{
+		consistencyCount++;
+		if (consistencyCount >= 2000000)
+		{
+			return consistencyCount;
+		}
+		//cout << i << " "; //See each attempted input
+		if (currentBoard->isValidMove(emptySquare,i))
+		{
+			/* If you find a number that is allowed, fill it in and recurse */
+			currentBoard->set_square_value(emptySquare.row, emptySquare.col, i);
+			consistencyCount = recursiveBackTrackingSearch(currentBoard, consistencyCount);
+
+			if(!(currentBoard->hasFailed()))
+			{
+				return consistencyCount;
+			}
+			/* If the search failed, erase value and attempt with different value */
+			currentBoard->set_square_value(emptySquare.row, emptySquare.col, 0);
+			currentBoard->setFailed(false);
+		}
+	}
+	/* Fail if there isn't a valid number to put in the selected free square */
+	currentBoard->setFailed(true);
+	return consistencyCount;
+}
+
+int backTrackingSearchFCheck(Board *initialBoard)
+{
+	int numberOfConsistencyChecks = recursiveBackTrackingSearchFCheck(initialBoard, 0);
+	return numberOfConsistencyChecks;
+}
+
 /*###### main Function ######*/
 
 int main(int argc, char* argv[])
@@ -564,6 +607,19 @@ int main(int argc, char* argv[])
 		cout << "Victory!\n";
 	else
 		cout << "Defeat\n";
+
+	/*~~~~ 4x4 board Forward Checking ~~~~*/ 
+	inputBoard_4x4 = Board::fromFile("4x4.sudoku");
+
+	cout << "4x4 Board Forward Checking\n";
+	int numberOfConsistencyChecks_4x4_FCheck = backTrackingSearchFCheck(inputBoard_4x4);
+	
+	if (inputBoard_4x4->checkForVictory())
+		cout << "Victory!\n";
+	else
+		cout << "Defeat\n";
+	
+
 
 	/*~~~~ 9x9 board ~~~~*/
 	Board *inputBoard_9x9 = Board::fromFile("9x9.sudoku");
