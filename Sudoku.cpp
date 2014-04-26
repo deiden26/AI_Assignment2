@@ -53,8 +53,8 @@ public:
 	void printBoard();
 	int numberOfConstraints(rowCol position);
 	rowCol mostConstrainedFreeSquare();
-  int numberOfConstraining( rowCol position);
-  rowCol MRVandMCV();
+ 	int numberOfConstraining( rowCol position);
+	rowCol mrvMcvFreeSquare();
 };
 
 Board::Board(int d) {
@@ -392,11 +392,12 @@ int Board::numberOfConstraining(rowCol position)
 	{
 		for(int m=1; m<dimsqrt+1;m++)
 		{
-      // We don't want to double count any of the free squares that were already counted
-      // in the row and column
-      if ( subBoardRow * dimsqrt + k == position.row || subBoardCol * dimsqrt + m == position.col ) {
-        continue;
-      }
+			// We don't want to double count any of the free squares that were already counted
+			// in the row and column
+			if ( subBoardRow * dimsqrt + k == position.row || subBoardCol * dimsqrt + m == position.col )
+			{
+				continue;
+			}
 			if (this->get_square_value(subBoardRow*dimsqrt+k, subBoardCol*dimsqrt+m) == 0)
 			{
 				constrainingCount += 1;
@@ -407,7 +408,7 @@ int Board::numberOfConstraining(rowCol position)
   return constrainingCount;
 }
 
-rowCol Board::MRVandMCV()
+rowCol Board::mrvMcvFreeSquare()
 /* Chooses minimum remaining value square of the board.
  * Ties are broken using the constraining variable count */
 {
@@ -417,30 +418,33 @@ rowCol Board::MRVandMCV()
 	{
 		for(int j=1; j < dim+1;j++)
 		{
-      if (this->get_square_value(i, j) != 0) {
-          // skip squares that are already filled
-          continue;
-      }
-      rowCol current = rowCol(i, j);
+			if (this->get_square_value(i, j) != 0)
+			{
+			  // skip squares that are already filled
+			  continue;
+			}
+			rowCol current = rowCol(i, j);
 			int currentConstraints = this->numberOfConstraints(rowCol(i,j));
-      if (currentConstraints >= dim) {
-          // this is just a sanity check to make sure
-          // the number of constraints are reasonable
-          continue;
-      }
-      if (currentConstraints > maxConstraints) {
-        maxConstraints = currentConstraints;
-        mostConstrained = current;
-      }
-      if (currentConstraints == maxConstraints) {
-        // break the tie!
-        int mostConstrainedConstraining = numberOfConstraining(mostConstrained);
-        int currentConstraining = numberOfConstraining(current);
-        if (mostConstrainedConstraining < currentConstraining) {
-           // then replace 
-           mostConstrained = current;
-        }
-      }
+			if (currentConstraints > maxConstraints)
+			{
+				maxConstraints = currentConstraints;
+				mostConstrained = current;
+			}
+			if (currentConstraints == maxConstraints)
+			{
+				// break the tie!
+				int mostConstrainedConstraining = 0;
+				if (mostConstrained.row != 0)
+				{
+					mostConstrainedConstraining= numberOfConstraining(mostConstrained);
+				}
+				int currentConstraining = numberOfConstraining(current);
+				if (mostConstrainedConstraining < currentConstraining)
+				{
+					// then replace 
+					mostConstrained = current;
+				}
+			}
 		}
 	}
 	/* returning [0,0] signifies that no	*/
@@ -500,7 +504,7 @@ int recursiveBackTrackingSearchMRV(Board *currentBoard, int consistencyCount)
 {
 	//currentBoard->printBoard(); //See board at every recursion
 	/* Find a square to attempt to fill */
-	rowCol emptySquare = currentBoard->mostConstrainedFreeSquare();
+	rowCol emptySquare = currentBoard->mrvMcvFreeSquare();
 	/* If there isn't a free square, the search is complete */
 	if (emptySquare.row == 0)
 		return consistencyCount;
