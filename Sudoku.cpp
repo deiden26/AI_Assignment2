@@ -273,9 +273,7 @@ void Board::printBoard()
 
 int Board::numberOfConstraints(rowCol position)
 {
-  /* Apparently, setting the first element of an array 
-     implicitly sets the rest of the array to 0 values
-     since it's initialized. Learn something new every day!*/
+  // need to make this a variable sized array depending on size of board
 	int constraints[dim];
   memset(constraints, 0, dim * sizeof(int));
 	int constraintCount = 0;
