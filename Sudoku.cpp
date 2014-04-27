@@ -510,8 +510,10 @@ void Board::leastConstrainingValues(rowCol position, int* values)
 		for (int i=0; i<dim; i++)
 		{
 	        if(totalConstraints[i]<lowestConstraint)
-	        lowestConstraint=totalConstraints[i];
-	    	lowestPosition = i;
+	        {
+		        lowestConstraint=totalConstraints[i];
+		    	lowestPosition = i;
+		    }
 		}
 		values[j] = lowestPosition;
 		totalConstraints[lowestPosition] = 2147483647; //Highest 32bit int (Essential Infinity)
