@@ -805,26 +805,27 @@ int main(int argc, char* argv[])
 		cout << "Defeat\n";
 
 	/*~~~ Performance Table ~~~*/
-	cout << "\n-----------------------------------------\n";
-	cout << "| "  << "Problem" << setw(4) << "| " << "BackTracking" << setw(4) << "|" << " MRV + MCV" << setw (2) << "|" << endl;
-	cout << "| ------------------------------------- |\n";
+	cout << "\n-----------------------------------------------------------\n";
+	cout << "| "  << "Problem" << setw(4) << "| " << "BackTracking" << setw(5) << "| " << "MRV + MCV" << setw (3) << "| ";
+	cout << "MRV + MCV + LCV" << setw(2) << "|" << endl;
+	cout << "| ------------------------------------------------------- |\n";
 	/* 4x4 Row */
 	cout << "| " << "4x4" << setw(8) << "| " << numberOfConsistencyChecks_4x4 << setw(14) << "| ";
-	cout << numberOfConsistencyChecks_4x4_MRV << setw(9) << "|";
-	cout << numberOfConsistencyChecks_4x4_MRV_LVC << setw(9) << "|" << endl;
+	cout << numberOfConsistencyChecks_4x4_MRV << setw(10) << "| ";
+	cout << numberOfConsistencyChecks_4x4_MRV_LVC << setw(15) << "|" << endl;
 	/* 9x9 Row */
 	cout << "| " << "9x9" << setw(8) << "| " << numberOfConsistencyChecks_9x9 << setw(11) << "| ";
-	cout << numberOfConsistencyChecks_9x9_MRV << setw(8) << "|";
-	cout << numberOfConsistencyChecks_9x9_MRV_LVC << setw(8) << "|" << endl;
+	cout << numberOfConsistencyChecks_9x9_MRV << setw(9) << "| ";
+	cout << numberOfConsistencyChecks_9x9_MRV_LVC << setw(13) << "|" << endl;
 	/* 16x16 Row */
 	cout << "| " << "16x16" << setw(6) << "| " << numberOfConsistencyChecks_16x16 << setw(10) << "| ";
-	cout << numberOfConsistencyChecks_16x16_MRV << setw(5) << "|";
-	cout << numberOfConsistencyChecks_16x16_MRV_LVC << setw(5) << "|" << endl;
+	cout << numberOfConsistencyChecks_16x16_MRV << setw(6) << "| ";
+	cout << numberOfConsistencyChecks_16x16_MRV_LVC << setw(11) << "|" << endl;
 
 	/* 25x25 Row */
 	cout << "| " << "25x25" << setw(6) << "| " << numberOfConsistencyChecks_25x25 << setw(10) << "| ";
-	cout << numberOfConsistencyChecks_25x25_MRV << setw(4) << "|";
-	cout << numberOfConsistencyChecks_25x25_MRV_LVC << setw(4) << "|" << endl;
+	cout << numberOfConsistencyChecks_25x25_MRV << setw(5) << "| ";
+	cout << numberOfConsistencyChecks_25x25_MRV_LVC << setw(10) << "|" << endl;
 	cout << endl;
 
 	return 1;
