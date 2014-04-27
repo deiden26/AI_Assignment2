@@ -465,40 +465,47 @@ void Board::leastConstrainingValues(rowCol position, int* values)
 
 	for (int j=1; j < dim+1; j++)
 	{
-		currentTotalConstraints = 0;
-		this->set_square_value(position.row, position.col, j);
-		for (int i=1; i<dim+1 ;i++)
+		if (this->isValidMove(position,j))
 		{
-			/* Check column for any square with value == 0 */
-			if (this->get_square_value(i, position.col) == 0)
+			currentTotalConstraints = 0;
+			this->set_square_value(position.row, position.col, j);
+			for (int i=1; i<dim+1 ;i++)
 			{
-				currentTotalConstraints += this->numberOfConstraints(rowCol(i, position.col));
+				/* Check column for any square with value == 0 */
+				if (this->get_square_value(i, position.col) == 0)
+				{
+					currentTotalConstraints += this->numberOfConstraints(rowCol(i, position.col));
+				}
+				/* Check row for any square with value == 0 */
+				if (this->get_square_value(position.row, i) == 0)
+				{
+					currentTotalConstraints += this->numberOfConstraints(rowCol(position.row, i));
+				}
 			}
-			/* Check row for any square with value == 0 */
-			if (this->get_square_value(position.row, i) == 0)
-			{
-				currentTotalConstraints += this->numberOfConstraints(rowCol(position.row, i));
-			}
-		}
 
-		/* Check subBoard for any square with value == 0 */
-		for(int k=1; k<dimsqrt+1;k++)
-		{
-			for(int m=1; m<dimsqrt+1;m++)
+			/* Check subBoard for any square with value == 0 */
+			for(int k=1; k<dimsqrt+1;k++)
 			{
-				// We don't want to double count any of the free squares that were already counted
-				// in the row and column
-				if ( subBoardRow * dimsqrt + k == position.row || subBoardCol * dimsqrt + m == position.col )
+				for(int m=1; m<dimsqrt+1;m++)
 				{
-					continue;
-				}
-				if (this->get_square_value(subBoardRow*dimsqrt+k, subBoardCol*dimsqrt+m) == 0)
-				{
-					currentTotalConstraints += this->numberOfConstraints(rowCol(subBoardRow*dimsqrt+k, subBoardCol*dimsqrt+m));
+					// We don't want to double count any of the free squares that were already counted
+					// in the row and column
+					if ( subBoardRow * dimsqrt + k == position.row || subBoardCol * dimsqrt + m == position.col )
+					{
+						continue;
+					}
+					if (this->get_square_value(subBoardRow*dimsqrt+k, subBoardCol*dimsqrt+m) == 0)
+					{
+						currentTotalConstraints += this->numberOfConstraints(rowCol(subBoardRow*dimsqrt+k, subBoardCol*dimsqrt+m));
+					}
 				}
 			}
+			totalConstraints[j-1] = currentTotalConstraints;
 		}
-		totalConstraints[j-1] = currentTotalConstraints;
+		else
+		{
+			totalConstraints[j-1] = 2147483646; //Highest 32bit int - 1 (Essential Infinity)
+		}
 	}
 
 
@@ -515,7 +522,7 @@ void Board::leastConstrainingValues(rowCol position, int* values)
 		    	lowestPosition = i;
 		    }
 		}
-		values[j] = lowestPosition;
+		values[j] = lowestPosition+1;
 		totalConstraints[lowestPosition] = 2147483647; //Highest 32bit int (Essential Infinity)
 	}
 
