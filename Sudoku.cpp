@@ -454,6 +454,8 @@ rowCol Board::mrvMcvFreeSquare()
 }
 void Board::leastConstrainingValues(rowCol position, int* values)
 {
+	/* Returns a list of all values that can be used to fill the square at
+	 * position in increasing order of how many constraints the value would cause */
 	int totalConstraints[dim];
 	int currentTotalConstraints;
 
@@ -468,7 +470,9 @@ void Board::leastConstrainingValues(rowCol position, int* values)
 		if (this->isValidMove(position,j))
 		{
 			currentTotalConstraints = 0;
+			/* Fill square with the test value */
 			this->set_square_value(position.row, position.col, j);
+			/* Count the number of constraints on every variable that the square constrains */
 			for (int i=1; i<dim+1 ;i++)
 			{
 				/* Check column for any square with value == 0 */
@@ -500,20 +504,27 @@ void Board::leastConstrainingValues(rowCol position, int* values)
 					}
 				}
 			}
+			/* Store the constraint count in an array with indeces
+			 * corresponding to possible square values */
 			totalConstraints[j-1] = currentTotalConstraints;
 		}
 		else
 		{
+			/* If the move isn't allowed, give it the highest possible constraint count */
 			totalConstraints[j-1] = 2147483646; //Highest 32bit int - 1 (Essential Infinity)
 		}
 	}
 
 
+	/* This section is used to order potential values
+	 * by the number of variables they would constrain */
 	int lowestPosition;
 	int lowestConstraint;
+	/* At each itteration of the loop, find the lowest number in the array */
 	for (int j=0; j<dim; j++)
 	{
 		lowestConstraint = 2147483647; //Highest 32bit int (Essential Infinity)
+		/* Find the lowest number in the array */
 		for (int i=0; i<dim; i++)
 		{
 	        if(totalConstraints[i]<lowestConstraint)
@@ -522,10 +533,12 @@ void Board::leastConstrainingValues(rowCol position, int* values)
 		    	lowestPosition = i;
 		    }
 		}
+		/* Use the position of the lowest number to find what value it corresponds to */
 		values[j] = lowestPosition+1;
+		/* Set the number of this value to (basically) Infinity so it won't be selected again */
 		totalConstraints[lowestPosition] = 2147483647; //Highest 32bit int (Essential Infinity)
 	}
-
+	/* Clear the value of the square that was being tested */
 	this->set_square_value(position.row, position.col, 0);
 	return;
 }
