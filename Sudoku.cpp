@@ -29,6 +29,25 @@ rowCol::rowCol(int inputRow, int inputCol)
 	return;
 }
 
+class rowColFCheck: public rowCol
+{
+public: 
+	int *remainingValues;
+	int index;
+	rowColFCheck(int inputRow, int inputCol, int dim);
+};
+
+rowColFCheck::rowColFCheck(int inputRow, int inputCol, int dim) 
+	: rowCol(inputRow, inputCol)
+{
+	remainingValues = new int[dim];
+	for (int i=0; i < dim; i++) 
+	{
+		remainingValues[i] = i+1;
+	}
+	index = 0;
+}
+
 /*###### Board Class ######*/
 
 class Board
@@ -47,14 +66,15 @@ public:
 	bool checkForVictory();
 	int get_dim() {return dim;}
 	rowCol findEmptySquare();
+	rowColFCheck findEmptySquareFCheck();
 	bool isValidMove(rowCol position, int value);
 	bool hasFailed() {return failed;}
 	void setFailed(bool state);
 	void printBoard();
 	int numberOfConstraints(rowCol position);
 	rowCol mostConstrainedFreeSquare();
-  int numberOfConstraining( rowCol position);
-  rowCol MRVandMCV();
+  	int numberOfConstraining( rowCol position);
+  	rowCol MRVandMCV();
 };
 
 Board::Board(int d) {
@@ -178,6 +198,25 @@ rowCol Board::findEmptySquare()
 	/* returning [0,0] signifies that no	*/
 	/* free square was found				*/
 	return rowCol(0, 0);
+}
+
+rowColFCheck Board::findEmptySquareFCheck() 
+{
+	/* Search every element of the board  until	*/
+	/* an element is found with value == 0		*/
+	for(int i=1; i<dim+1;i++)
+	{
+		for(int j=1;j <dim+1;j++)
+		{
+			if(this->get_square_value(i,j)==0)
+			{
+				return rowColFCheck(i, j, dim);
+			}
+		}
+	}
+	/* returning [0,0] signifies that no	*/
+	/* free square was found				*/
+	return rowColFCheck(0, 0, dim);
 }
 
 bool Board::isValidMove(rowCol position, int newValue)
@@ -448,6 +487,27 @@ rowCol Board::MRVandMCV()
 	return mostConstrained;
 }
 
+/* Standard push and pop methods */
+void push(int x, rowColFCheck* v) 
+{
+	v->remainingValues[v->index + 1] = x;
+	v->index++; 
+}
+
+int pop(int x, rowColFCheck *v) 
+{
+	for (int i = 0; i < v->index; i++) {
+		if (v->remainingValues[i] == x) {
+			for (i; v->remainingValues[i] != 0; i++) {
+				v->remainingValues[i] = v->remainingValues[i+1];
+			}
+			v->index--;
+			return x;
+		}
+	}
+	return -1; 
+}
+
 /*###### BackTracking Search ######*/
 
 
@@ -543,12 +603,31 @@ int recursiveBackTrackingSearchFCheck(Board *currentBoard, int consistencyCount)
 {
 	//currentBoard->printBoard(); //See board at every recursion
 	/* Find a square to attempt to fill */
-	rowCol emptySquare = currentBoard->findEmptySquare();
+	rowColFCheck emptySquare = currentBoard->findEmptySquareFCheck();
 	/* If there isn't a free square, the search is complete */
 	if (emptySquare.row == 0)
 		return consistencyCount;
 	/* Try all possible values for the given free square */
-	for (int i=1; i<currentBoard->get_dim()+1; i++)
+	for (int i = 0; i < emptySquare.index; i++)
+	{
+		consistencyCount++;
+		if (consistencyCount >= 2000000)
+		{
+			return consistencyCount;
+		}
+		// If you find a number that is allowed, fill it in and recurse 
+		currentBoard->set_square_value(emptySquare.row, emptySquare.col, emptySquare.remainingValues[i]);
+		consistencyCount = recursiveBackTrackingSearchFCheck(currentBoard, consistencyCount);
+
+		if(!(currentBoard->hasFailed()))
+		{
+			return consistencyCount;
+		}
+		// If the search failed, erase value and attempt with different value 
+		currentBoard->set_square_value(emptySquare.row, emptySquare.col, 0);
+		currentBoard->setFailed(false);
+	}
+	/*for (int i=1; i<=currentBoard->get_dim(); i++)
 	{
 		consistencyCount++;
 		if (consistencyCount >= 2000000)
@@ -558,19 +637,19 @@ int recursiveBackTrackingSearchFCheck(Board *currentBoard, int consistencyCount)
 		//cout << i << " "; //See each attempted input
 		if (currentBoard->isValidMove(emptySquare,i))
 		{
-			/* If you find a number that is allowed, fill it in and recurse */
+			// If you find a number that is allowed, fill it in and recurse 
 			currentBoard->set_square_value(emptySquare.row, emptySquare.col, i);
-			consistencyCount = recursiveBackTrackingSearch(currentBoard, consistencyCount);
+			consistencyCount = recursiveBackTrackingSearchFCheck(currentBoard, consistencyCount);
 
 			if(!(currentBoard->hasFailed()))
 			{
 				return consistencyCount;
 			}
-			/* If the search failed, erase value and attempt with different value */
+			// If the search failed, erase value and attempt with different value 
 			currentBoard->set_square_value(emptySquare.row, emptySquare.col, 0);
 			currentBoard->setFailed(false);
 		}
-	}
+	}*/
 	/* Fail if there isn't a valid number to put in the selected free square */
 	currentBoard->setFailed(true);
 	return consistencyCount;
@@ -586,6 +665,16 @@ int backTrackingSearchFCheck(Board *initialBoard)
 
 int main(int argc, char* argv[])
 {
+	rowColFCheck* test = new rowColFCheck(1, 1, 4);
+	int ton; 
+	cout << test->row << endl; 
+	cout << test->col << endl;
+	for (int i = 0; i < 4; i++) {
+		test->remainingValues[i] = i;
+		cout << test->remainingValues[i] << endl;
+	}
+	cout << "Press any key to continue:";
+	cin >> ton;
 	/*~~~~ 4x4 board BackTracking ~~~~*/
 	Board *inputBoard_4x4 = Board::fromFile("4x4.sudoku");
 
@@ -704,6 +793,6 @@ int main(int argc, char* argv[])
 	cout << "| " << "25x25" << setw(6) << "| " << numberOfConsistencyChecks_25x25 << setw(8) << "| ";
 	cout << numberOfConsistencyChecks_25x25_MRV << setw(6) << "|" << endl;
 	cout << endl;
-
+	
 	return 1;
 }
