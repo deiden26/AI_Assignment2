@@ -19,14 +19,27 @@ class rowCol
 public:
 	int row;
 	int col;
+	rowCol();
 	rowCol(int inputRow, int inputCol);
+	void setRowCol(int r, int c);
 };
+
+rowCol::rowCol() 
+{
+	row = 0;
+	col = 0;
+}
 
 rowCol::rowCol(int inputRow, int inputCol)
 {
 	row = inputRow;
 	col = inputCol;
 	return;
+}
+
+void rowCol::setRowCol(int r, int c) {
+	row = r;
+	col = c;
 }
 
 /*###### Board Class ######*/
@@ -49,7 +62,7 @@ public:
 	bool checkForVictory();
 	int get_dim() {return dim;}
 	rowCol findEmptySquare();
-	rowCol* FCheck(int r, int c, int x);
+	bool FCheck(int r, int c, int x);
 	bool isValidMove(rowCol position, int value);
 	bool hasFailed() {return failed;}
 	void setFailed(bool state);
@@ -462,11 +475,43 @@ int Board::popRemainingValues(int r, int c, int x)
 }
 
 void Board::resetRemainingValues(int r, int c, int x) {
-	/*int i = 0;
-	while (r[i] != NULL) {
-		this->pushRemainingValues(r[i].row, r[i].col, n);
-		i++;
-	} */
+	// Find the restraining values and then remove them from the list of remaining values
+	rowCol row, col, sub;
+
+	for (int i=1; i<dim+1 ;i++)
+	{
+		row.setRowCol(r, i);
+		col.setRowCol(i, c);
+		if (this->isValidMove(row, x))
+			pushRemainingValues(r, i, x);
+		if (this->isValidMove(col, x))
+			pushRemainingValues(i, c, x);
+		
+	}
+
+	/* Get the dimension of the subBoard */
+	int dimsqrt = (int)(sqrt((double)dim));
+	/* Get the row and column of the subBoard (zero indexed) */
+	int subBoardRow = ceil((float)r/(float)dimsqrt)-1;
+	int subBoardCol = ceil((float)c/(float)dimsqrt)-1;
+
+	/* Check subBoard for any square with value == 0 */
+	for(int k=1; k<dimsqrt+1;k++)
+	{
+		for(int m=1; m<dimsqrt+1;m++)
+		{
+	      // We don't want to double count any of the free squares that were already counted
+	      // in the row and column
+	      if ( subBoardRow * dimsqrt + k == r || subBoardCol * dimsqrt + m == c ) {
+	        continue;
+	      }
+		  sub.setRowCol(subBoardRow*dimsqrt+k, subBoardCol*dimsqrt+m);
+		  if (this->isValidMove(sub, x))
+		 	 pushRemainingValues(subBoardRow*dimsqrt+k, subBoardCol*dimsqrt+m, x);
+			
+		}
+	}
+	return;
 }
 
 void Board::printRemainingValues(int r, int c) {
@@ -530,24 +575,18 @@ void Board::initializeRemainingValues() {
 	}
 }
 
-rowCol* Board::FCheck(int r, int c, int x) {
+bool Board::FCheck(int r, int c, int x) {
 	// Find the restraining values and then remove them from the list of remaining values
-	int row, col, sub;
-	int m = 0; 
-	rowCol* changedValueLocations;
+	
 	for (int i=1; i<dim+1 ;i++)
 	{
-		row = popRemainingValues(r, i, x);
-		col = popRemainingValues(i, c, x);
-		if (row != -1) {
-			changedValueLocations[m].row = r;
-			changedValueLocations[m].col = i;
-			m++;
+		popRemainingValues(r, i, x);
+		popRemainingValues(i, c, x);
+		if (this->index[r-1][c-1] == 0) {
+			return false;
 		}
-		if (col != -1) {
-			changedValueLocations[m].row = i;
-			changedValueLocations[m].col = c;
-			m++;
+		if (this->index[i-1][c-1] == 0) {
+			return false;
 		}
 	}
 
@@ -568,16 +607,14 @@ rowCol* Board::FCheck(int r, int c, int x) {
 	        continue;
 	      }
 		  
-		  sub = popRemainingValues(subBoardRow*dimsqrt+k, subBoardCol*dimsqrt+m, x);
-		  if (sub != -1) {
-		  	changedValueLocations[m].row = subBoardRow*dimsqrt+k;
-		  	changedValueLocations[m].col = subBoardCol*dimsqrt+m;
-		  	m++;
+		  popRemainingValues(subBoardRow*dimsqrt+k, subBoardCol*dimsqrt+m, x);
+		  if (this->index[subBoardRow*dimsqrt+k-1][subBoardCol*dimsqrt+m-1] == 0) {
+		  	return false;
 		  }
 			
 		}
 	}
-	return changedValueLocations;
+	return true;
 }
 
 rowCol Board::MRVandMCV()
@@ -731,7 +768,7 @@ int recursiveBackTrackingSearchFCheck(Board *currentBoard, int consistencyCount)
 		if (consistencyCount >= 2000000)
 		{
 			return consistencyCount;
-		}
+		} 
 		//cout << i << " "; //See each attempted input
 		if (currentBoard->isValidMove(emptySquare,i))
 		{
@@ -739,7 +776,7 @@ int recursiveBackTrackingSearchFCheck(Board *currentBoard, int consistencyCount)
 			currentBoard->set_square_value(emptySquare.row, emptySquare.col, i);
 			// Now forward check, but maintain all current remaining values
 			// Need to save current remaining values and put them back, if necessary
-			remainingValueLocations = currentBoard->FCheck(emptySquare.row, emptySquare.col, i);
+			currentBoard->FCheck(emptySquare.row, emptySquare.col, i);
 			consistencyCount = recursiveBackTrackingSearch(currentBoard, consistencyCount);
 
 
@@ -774,17 +811,19 @@ int main(int argc, char* argv[])
 {
 	int ton;
 	
-	Board *test = Board::fromFile("4x4.sudoku");
-	test->initializeRemainingValues();
-	test->printRemainingValues(3, 3);
-	/*test->printRemainingValues(1, 1);
-	test->popRemainingValues(1, 1, 2);
-	test->printRemainingValues(1, 1);
-	test->printRemainingValues(1, 2);
-	test->pushRemainingValues(1, 1, 2);
-	test->printRemainingValues(1, 1);*/
-	//cout << "Press any key to continue:";
-	//cin >> ton;
+	Board *test = Board::fromFile("16x16.sudoku");
+	
+	int numberOfConsistencyChecks_16x16_FCheck = backTrackingSearchFCheck(test);
+
+	if (test->checkForVictory())
+		cout << "Victory!\n";
+	else 
+		cout << "Defeat\n";
+
+	test->printBoard();
+
+	cout << "Press any key to continue:";
+	cin >> ton;
 	/*~~~~ 4x4 board BackTracking ~~~~*/
 	Board *inputBoard_4x4 = Board::fromFile("4x4.sudoku");
 
