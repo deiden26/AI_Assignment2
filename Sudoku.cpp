@@ -811,16 +811,38 @@ int main(int argc, char* argv[])
 {
 	int ton;
 	
-	Board *test = Board::fromFile("16x16.sudoku");
+	Board *test1 = Board::fromFile("4x4.sudoku");
 	
-	int numberOfConsistencyChecks_16x16_FCheck = backTrackingSearchFCheck(test);
+	int numberOfConsistencyChecks_4x4_FCheck = backTrackingSearchFCheck(test1);
 
-	if (test->checkForVictory())
+	if (test1->checkForVictory())
 		cout << "Victory!\n";
 	else 
 		cout << "Defeat\n";
 
-	test->printBoard();
+	test1->printBoard();
+
+	Board *test2 = Board::fromFile("9x9.sudoku");
+	
+	int numberOfConsistencyChecks_9x9_FCheck = backTrackingSearchFCheck(test2);
+
+	if (test2->checkForVictory())
+		cout << "Victory!\n";
+	else 
+		cout << "Defeat\n";
+
+	test2->printBoard();
+
+	Board *test3 = Board::fromFile("16x16.sudoku");
+	
+	int numberOfConsistencyChecks_16x16_FCheck = backTrackingSearchFCheck(test3);
+
+	if (test3->checkForVictory())
+		cout << "Victory!\n";
+	else 
+		cout << "Defeat\n";
+
+	test3->printBoard();
 
 	cout << "Press any key to continue:";
 	cin >> ton;
@@ -851,7 +873,7 @@ int main(int argc, char* argv[])
 	
 
 	cout << "4x4 Board Forward Checking\n";
-	int numberOfConsistencyChecks_4x4_FCheck = backTrackingSearchFCheck(inputBoard_4x4);
+	numberOfConsistencyChecks_4x4_FCheck = backTrackingSearchFCheck(inputBoard_4x4);
 	
 	if (inputBoard_4x4->checkForVictory())
 		cout << "Victory!\n";
