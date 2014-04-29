@@ -29,25 +29,6 @@ rowCol::rowCol(int inputRow, int inputCol)
 	return;
 }
 
-class rowColFCheck: public rowCol
-{
-public: 
-	int *remainingValues;
-	int index;
-	rowColFCheck(int inputRow, int inputCol, int dim);
-};
-
-rowColFCheck::rowColFCheck(int inputRow, int inputCol, int dim) 
-	: rowCol(inputRow, inputCol)
-{
-	remainingValues = new int[dim];
-	for (int i=0; i < dim; i++) 
-	{
-		remainingValues[i] = i+1;
-	}
-	index = 0;
-}
-
 /*###### Board Class ######*/
 
 class Board
@@ -68,98 +49,29 @@ public:
 	bool checkForVictory();
 	int get_dim() {return dim;}
 	rowCol findEmptySquare();
-	rowColFCheck findEmptySquareFCheck();
+	rowCol* FCheck(int r, int c, int x);
 	bool isValidMove(rowCol position, int value);
 	bool hasFailed() {return failed;}
 	void setFailed(bool state);
 	void printBoard();
 	int numberOfConstraints(rowCol position);
 	rowCol mostConstrainedFreeSquare();
-  	int numberOfConstraining( rowCol position);
+  	int numberOfConstraining(rowCol position);
   	rowCol MRVandMCV();
   	int getIndex(int r, int c) {return index[r-1][c-1];};
   	void setIndex(int r, int c, int i) {index[r-1][c-1] = i;};
+  	int *** getRemainingValues() {return remainingValues;};
+  	void setRemainingValues(int*** r) {remainingValues = r;};
 	int* getRemainingValues(int r, int c) {return remainingValues[r-1][c-1];}
 	void pushRemainingValues(int r, int c, int x);
 	int popRemainingValues(int r, int c, int x);
+	void resetRemainingValues(int r, int c, int x);
 	void printRemainingValues(int r, int c);
 	int findConstrainingValues(int r, int c);
 	void initializeRemainingValues();
 };
 
-/*class BoardFC : public Board {
-private: 
-	int *** remainingValues;
-	int ** index;
-public: 
-	int getIndex(int r, int c) {return index[r-1][c-1];};
-	void setIndex(int r, int c, int i) {index[r-1][c-1] = i;};
-	int* getRemainingValues(int r, int c);
-	void pushRemainingValues(int r, int c, int x);
-	int popRemainingValues(int r, int c, int x);
-	void printRemainingValues(int r, int c);
-	BoardFC(int d);
-};*/
 
-/*BoardFC::BoardFC(int d) 
-	: Board(d) 
-{	
-	remainingValues = new int**[d];
-	index = new int*[d];
-	for (int i = 0; i<d; i++) {
-		remainingValues[i] = new int*[d];
-		index[i] = new int[d];
-		for (int j=0; j<d; j++) {
-			remainingValues[i][j] = new int[d];
-			index[i][j] = d;
-			for (int k=0; k<d; k++) {
-				remainingValues[i][j][k] = k+1;
-			}
-		}
-	}
-}
-
-int* BoardFC::getRemainingValues(int r, int c) 
-{
-	return remainingValues[r-1][c-1];
-}
-
-void BoardFC::pushRemainingValues(int r, int c, int x)
-{
-	int ind = index[r-1][c-1];
-	if (ind != this->get_dim()) {
-		remainingValues[r-1][c-1][ind] = x;
-		ind++;
-	} 
-	index[r-1][c-1] = ind;
-	return;
-}
-
-int BoardFC::popRemainingValues(int r, int c, int x)
-{
-	int ind = index[r-1][c-1];
-	for (int i=0; i<ind; i++) {
-		if (remainingValues[r-1][c-1][i] == x) {
-			remainingValues[r-1][c-1][i] = -1;
-			for (i; i < ind; i++) {
-				remainingValues[r-1][c-1][i] = remainingValues[r-1][c-1][i+1];
-			} 
-			ind--;
-			index[r-1][c-1] = ind;
-			return x;
-		}
-	}
-	return -1;
-}
-
-void BoardFC::printRemainingValues(int r, int c) {
-	cout << "Remaining Values:\n\t";
-	int ind = index[r-1][c-1];
-	for (int i=0; i<ind; i++) {
-		cout << remainingValues[r-1][c-1][i] << "\t";
-	}
-	cout << endl;
-} */
 
 Board::Board(int d) {
 	if(d > 62)
@@ -292,25 +204,6 @@ rowCol Board::findEmptySquare()
 	/* returning [0,0] signifies that no	*/
 	/* free square was found				*/
 	return rowCol(0, 0);
-}
-
-rowColFCheck Board::findEmptySquareFCheck() 
-{
-	/* Search every element of the board  until	*/
-	/* an element is found with value == 0		*/
-	for(int i=1; i<dim+1;i++)
-	{
-		for(int j=1;j <dim+1;j++)
-		{
-			if(this->get_square_value(i,j)==0)
-			{
-				return rowColFCheck(i, j, dim);
-			}
-		}
-	}
-	/* returning [0,0] signifies that no	*/
-	/* free square was found				*/
-	return rowColFCheck(0, 0, dim);
 }
 
 bool Board::isValidMove(rowCol position, int newValue)
@@ -568,6 +461,14 @@ int Board::popRemainingValues(int r, int c, int x)
 	return -1;
 }
 
+void Board::resetRemainingValues(int r, int c, int x) {
+	/*int i = 0;
+	while (r[i] != NULL) {
+		this->pushRemainingValues(r[i].row, r[i].col, n);
+		i++;
+	} */
+}
+
 void Board::printRemainingValues(int r, int c) {
 	cout << "Remaining Values:\n\t";
 	int ind = index[r-1][c-1];
@@ -627,6 +528,56 @@ void Board::initializeRemainingValues() {
 			}
 		}
 	}
+}
+
+rowCol* Board::FCheck(int r, int c, int x) {
+	// Find the restraining values and then remove them from the list of remaining values
+	int row, col, sub;
+	int m = 0; 
+	rowCol* changedValueLocations;
+	for (int i=1; i<dim+1 ;i++)
+	{
+		row = popRemainingValues(r, i, x);
+		col = popRemainingValues(i, c, x);
+		if (row != -1) {
+			changedValueLocations[m].row = r;
+			changedValueLocations[m].col = i;
+			m++;
+		}
+		if (col != -1) {
+			changedValueLocations[m].row = i;
+			changedValueLocations[m].col = c;
+			m++;
+		}
+	}
+
+	/* Get the dimension of the subBoard */
+	int dimsqrt = (int)(sqrt((double)dim));
+	/* Get the row and column of the subBoard (zero indexed) */
+	int subBoardRow = ceil((float)r/(float)dimsqrt)-1;
+	int subBoardCol = ceil((float)c/(float)dimsqrt)-1;
+
+	/* Check subBoard for any square with value == 0 */
+	for(int k=1; k<dimsqrt+1;k++)
+	{
+		for(int m=1; m<dimsqrt+1;m++)
+		{
+	      // We don't want to double count any of the free squares that were already counted
+	      // in the row and column
+	      if ( subBoardRow * dimsqrt + k == r || subBoardCol * dimsqrt + m == c ) {
+	        continue;
+	      }
+		  
+		  sub = popRemainingValues(subBoardRow*dimsqrt+k, subBoardCol*dimsqrt+m, x);
+		  if (sub != -1) {
+		  	changedValueLocations[m].row = subBoardRow*dimsqrt+k;
+		  	changedValueLocations[m].col = subBoardCol*dimsqrt+m;
+		  	m++;
+		  }
+			
+		}
+	}
+	return changedValueLocations;
 }
 
 rowCol Board::MRVandMCV()
@@ -769,6 +720,7 @@ int recursiveBackTrackingSearchFCheck(Board *currentBoard, int consistencyCount)
 	//currentBoard->printBoard(); //See board at every recursion
 	/* Find a square to attempt to fill */
 	rowCol emptySquare = currentBoard->findEmptySquare();
+	rowCol* remainingValueLocations;
 	/* If there isn't a free square, the search is complete */
 	if (emptySquare.row == 0)
 		return consistencyCount;
@@ -785,14 +737,21 @@ int recursiveBackTrackingSearchFCheck(Board *currentBoard, int consistencyCount)
 		{
 			/* If you find a number that is allowed, fill it in and recurse */
 			currentBoard->set_square_value(emptySquare.row, emptySquare.col, i);
+			// Now forward check, but maintain all current remaining values
+			// Need to save current remaining values and put them back, if necessary
+			remainingValueLocations = currentBoard->FCheck(emptySquare.row, emptySquare.col, i);
 			consistencyCount = recursiveBackTrackingSearch(currentBoard, consistencyCount);
+
 
 			if(!(currentBoard->hasFailed()))
 			{
 				return consistencyCount;
 			}
 			/* If the search failed, erase value and attempt with different value */
+			// Reset remainingValues
 			currentBoard->set_square_value(emptySquare.row, emptySquare.col, 0);
+			currentBoard->resetRemainingValues(emptySquare.row, emptySquare.col, i);
+			
 			currentBoard->setFailed(false);
 		}
 	}
@@ -849,7 +808,7 @@ int main(int argc, char* argv[])
 		cout << "Defeat\n";
 
 	/*~~~~ 4x4 board Forward Checking ~~~~*/ 
-	/*Board* inputBoardFC_4x4 = Board::fromFile("4x4.sudoku");
+	Board* inputBoardFC_4x4 = Board::fromFile("4x4.sudoku");
 	
 
 	cout << "4x4 Board Forward Checking\n";
@@ -860,7 +819,7 @@ int main(int argc, char* argv[])
 	else
 		cout << "Defeat\n";
 	
-	*/
+	
 
 	/*~~~~ 9x9 board ~~~~*/
 	Board *inputBoard_9x9 = Board::fromFile("9x9.sudoku");
