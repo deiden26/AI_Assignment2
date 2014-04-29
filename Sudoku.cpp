@@ -56,6 +56,8 @@ class Board
 	int ** cells;
 	long totalChecks;
 	bool failed;
+	int *** remainingValues; // For forward checking
+	int ** index;
 public:
 	Board (int);
 	~Board();
@@ -75,17 +77,109 @@ public:
 	rowCol mostConstrainedFreeSquare();
   	int numberOfConstraining( rowCol position);
   	rowCol MRVandMCV();
+  	int getIndex(int r, int c) {return index[r-1][c-1];};
+  	void setIndex(int r, int c, int i) {index[r-1][c-1] = i;};
+	int* getRemainingValues(int r, int c) {return remainingValues[r-1][c-1];}
+	void pushRemainingValues(int r, int c, int x);
+	int popRemainingValues(int r, int c, int x);
+	void printRemainingValues(int r, int c);
+	int findConstrainingValues(int r, int c);
+	void initializeRemainingValues();
 };
+
+/*class BoardFC : public Board {
+private: 
+	int *** remainingValues;
+	int ** index;
+public: 
+	int getIndex(int r, int c) {return index[r-1][c-1];};
+	void setIndex(int r, int c, int i) {index[r-1][c-1] = i;};
+	int* getRemainingValues(int r, int c);
+	void pushRemainingValues(int r, int c, int x);
+	int popRemainingValues(int r, int c, int x);
+	void printRemainingValues(int r, int c);
+	BoardFC(int d);
+};*/
+
+/*BoardFC::BoardFC(int d) 
+	: Board(d) 
+{	
+	remainingValues = new int**[d];
+	index = new int*[d];
+	for (int i = 0; i<d; i++) {
+		remainingValues[i] = new int*[d];
+		index[i] = new int[d];
+		for (int j=0; j<d; j++) {
+			remainingValues[i][j] = new int[d];
+			index[i][j] = d;
+			for (int k=0; k<d; k++) {
+				remainingValues[i][j][k] = k+1;
+			}
+		}
+	}
+}
+
+int* BoardFC::getRemainingValues(int r, int c) 
+{
+	return remainingValues[r-1][c-1];
+}
+
+void BoardFC::pushRemainingValues(int r, int c, int x)
+{
+	int ind = index[r-1][c-1];
+	if (ind != this->get_dim()) {
+		remainingValues[r-1][c-1][ind] = x;
+		ind++;
+	} 
+	index[r-1][c-1] = ind;
+	return;
+}
+
+int BoardFC::popRemainingValues(int r, int c, int x)
+{
+	int ind = index[r-1][c-1];
+	for (int i=0; i<ind; i++) {
+		if (remainingValues[r-1][c-1][i] == x) {
+			remainingValues[r-1][c-1][i] = -1;
+			for (i; i < ind; i++) {
+				remainingValues[r-1][c-1][i] = remainingValues[r-1][c-1][i+1];
+			} 
+			ind--;
+			index[r-1][c-1] = ind;
+			return x;
+		}
+	}
+	return -1;
+}
+
+void BoardFC::printRemainingValues(int r, int c) {
+	cout << "Remaining Values:\n\t";
+	int ind = index[r-1][c-1];
+	for (int i=0; i<ind; i++) {
+		cout << remainingValues[r-1][c-1][i] << "\t";
+	}
+	cout << endl;
+} */
 
 Board::Board(int d) {
 	if(d > 62)
 		throw ("Dimensions must be at most 62");
 	dim = d;
 	cells = new int*[dim];
+	remainingValues = new int**[dim];
+	index = new int*[dim];
 	for(int i=0; i<dim;i++) {
 		cells[i] = new int[dim];
-		for(int j=0; j<dim;j++)
+		index[i] = new int[dim];
+		remainingValues[i] = new int*[dim];
+		for(int j=0; j<dim;j++) {
 			cells[i][j] = 0;
+			index[i][j] = dim;
+			remainingValues[i][j] = new int[dim];
+			for (int k=0; k<dim; k++) {
+				remainingValues[i][j][k] = k+1;
+			}
+		}
 	}
 	failed = false;
 	totalChecks = 0;
@@ -446,6 +540,95 @@ int Board::numberOfConstraining(rowCol position)
   return constrainingCount;
 }
 
+void Board::pushRemainingValues(int r, int c, int x)
+{
+	int ind = index[r-1][c-1];
+	if (ind != this->get_dim()) {
+		remainingValues[r-1][c-1][ind] = x;
+		ind++;
+	} 
+	index[r-1][c-1] = ind;
+	return;
+}
+
+int Board::popRemainingValues(int r, int c, int x)
+{
+	int ind = index[r-1][c-1];
+	for (int i=0; i<ind; i++) {
+		if (remainingValues[r-1][c-1][i] == x) {
+			remainingValues[r-1][c-1][i] = -1;
+			for (i; i < ind; i++) {
+				remainingValues[r-1][c-1][i] = remainingValues[r-1][c-1][i+1];
+			} 
+			ind--;
+			index[r-1][c-1] = ind;
+			return x;
+		}
+	}
+	return -1;
+}
+
+void Board::printRemainingValues(int r, int c) {
+	cout << "Remaining Values:\n\t";
+	int ind = index[r-1][c-1];
+	for (int i=0; i<ind; i++) {
+		cout << remainingValues[r-1][c-1][i] << "\t";
+	}
+	cout << endl;
+}
+
+int Board::findConstrainingValues(int r, int c) {
+	// Find the restraining values and then remove them from the list of remaining values
+	
+	for (int i=1; i<dim+1 ;i++)
+	{
+		/* Check column for any square with value == 0 */
+		if (this->get_square_value(i, c) != 0)
+		{
+			popRemainingValues(r, c, this->get_square_value(i, c));
+		}
+		/* Check row for any square with value == 0 */
+		if (this->get_square_value(r, i) != 0)
+		{
+			popRemainingValues(r, c, this->get_square_value(r, i));
+		}
+	}
+
+	/* Get the dimension of the subBoard */
+	int dimsqrt = (int)(sqrt((double)dim));
+	/* Get the row and column of the subBoard (zero indexed) */
+	int subBoardRow = ceil((float)r/(float)dimsqrt)-1;
+	int subBoardCol = ceil((float)c/(float)dimsqrt)-1;
+
+	/* Check subBoard for any square with value == 0 */
+	for(int k=1; k<dimsqrt+1;k++)
+	{
+		for(int m=1; m<dimsqrt+1;m++)
+		{
+	      // We don't want to double count any of the free squares that were already counted
+	      // in the row and column
+	      if ( subBoardRow * dimsqrt + k == r || subBoardCol * dimsqrt + m == c ) {
+	        continue;
+	      }
+			if (this->get_square_value(subBoardRow*dimsqrt+k, subBoardCol*dimsqrt+m) != 0)
+			{
+				popRemainingValues(r, c, this->get_square_value(subBoardRow*dimsqrt+k, subBoardCol*dimsqrt+m));
+			}
+		}
+	}
+	
+}
+
+void Board::initializeRemainingValues() {
+	for (int i=1; i<=dim; i++) {
+		for (int j=1; j<=dim; j++) {
+			if (cells[i-1][j-1] == 0) {
+				findConstrainingValues(i, j);
+			}
+		}
+	}
+}
+
 rowCol Board::MRVandMCV()
 /* Chooses minimum remaining value square of the board.
  * Ties are broken using the constraining variable count */
@@ -487,26 +670,8 @@ rowCol Board::MRVandMCV()
 	return mostConstrained;
 }
 
-/* Standard push and pop methods */
-void push(int x, rowColFCheck* v) 
-{
-	v->remainingValues[v->index + 1] = x;
-	v->index++; 
-}
 
-int pop(int x, rowColFCheck *v) 
-{
-	for (int i = 0; i < v->index; i++) {
-		if (v->remainingValues[i] == x) {
-			for (i; v->remainingValues[i] != 0; i++) {
-				v->remainingValues[i] = v->remainingValues[i+1];
-			}
-			v->index--;
-			return x;
-		}
-	}
-	return -1; 
-}
+
 
 /*###### BackTracking Search ######*/
 
@@ -603,31 +768,12 @@ int recursiveBackTrackingSearchFCheck(Board *currentBoard, int consistencyCount)
 {
 	//currentBoard->printBoard(); //See board at every recursion
 	/* Find a square to attempt to fill */
-	rowColFCheck emptySquare = currentBoard->findEmptySquareFCheck();
+	rowCol emptySquare = currentBoard->findEmptySquare();
 	/* If there isn't a free square, the search is complete */
 	if (emptySquare.row == 0)
 		return consistencyCount;
 	/* Try all possible values for the given free square */
-	for (int i = 0; i < emptySquare.index; i++)
-	{
-		consistencyCount++;
-		if (consistencyCount >= 2000000)
-		{
-			return consistencyCount;
-		}
-		// If you find a number that is allowed, fill it in and recurse 
-		currentBoard->set_square_value(emptySquare.row, emptySquare.col, emptySquare.remainingValues[i]);
-		consistencyCount = recursiveBackTrackingSearchFCheck(currentBoard, consistencyCount);
-
-		if(!(currentBoard->hasFailed()))
-		{
-			return consistencyCount;
-		}
-		// If the search failed, erase value and attempt with different value 
-		currentBoard->set_square_value(emptySquare.row, emptySquare.col, 0);
-		currentBoard->setFailed(false);
-	}
-	/*for (int i=1; i<=currentBoard->get_dim(); i++)
+	for (int i=1; i<currentBoard->get_dim()+1; i++)
 	{
 		consistencyCount++;
 		if (consistencyCount >= 2000000)
@@ -637,19 +783,19 @@ int recursiveBackTrackingSearchFCheck(Board *currentBoard, int consistencyCount)
 		//cout << i << " "; //See each attempted input
 		if (currentBoard->isValidMove(emptySquare,i))
 		{
-			// If you find a number that is allowed, fill it in and recurse 
+			/* If you find a number that is allowed, fill it in and recurse */
 			currentBoard->set_square_value(emptySquare.row, emptySquare.col, i);
-			consistencyCount = recursiveBackTrackingSearchFCheck(currentBoard, consistencyCount);
+			consistencyCount = recursiveBackTrackingSearch(currentBoard, consistencyCount);
 
 			if(!(currentBoard->hasFailed()))
 			{
 				return consistencyCount;
 			}
-			// If the search failed, erase value and attempt with different value 
+			/* If the search failed, erase value and attempt with different value */
 			currentBoard->set_square_value(emptySquare.row, emptySquare.col, 0);
 			currentBoard->setFailed(false);
 		}
-	}*/
+	}
 	/* Fail if there isn't a valid number to put in the selected free square */
 	currentBoard->setFailed(true);
 	return consistencyCount;
@@ -657,6 +803,8 @@ int recursiveBackTrackingSearchFCheck(Board *currentBoard, int consistencyCount)
 
 int backTrackingSearchFCheck(Board *initialBoard)
 {
+	// Write function that initializes remainingValues 
+	initialBoard->initializeRemainingValues();
 	int numberOfConsistencyChecks = recursiveBackTrackingSearchFCheck(initialBoard, 0);
 	return numberOfConsistencyChecks;
 }
@@ -665,16 +813,19 @@ int backTrackingSearchFCheck(Board *initialBoard)
 
 int main(int argc, char* argv[])
 {
-	rowColFCheck* test = new rowColFCheck(1, 1, 4);
-	int ton; 
-	cout << test->row << endl; 
-	cout << test->col << endl;
-	for (int i = 0; i < 4; i++) {
-		test->remainingValues[i] = i;
-		cout << test->remainingValues[i] << endl;
-	}
-	cout << "Press any key to continue:";
-	cin >> ton;
+	int ton;
+	
+	Board *test = Board::fromFile("4x4.sudoku");
+	test->initializeRemainingValues();
+	test->printRemainingValues(3, 3);
+	/*test->printRemainingValues(1, 1);
+	test->popRemainingValues(1, 1, 2);
+	test->printRemainingValues(1, 1);
+	test->printRemainingValues(1, 2);
+	test->pushRemainingValues(1, 1, 2);
+	test->printRemainingValues(1, 1);*/
+	//cout << "Press any key to continue:";
+	//cin >> ton;
 	/*~~~~ 4x4 board BackTracking ~~~~*/
 	Board *inputBoard_4x4 = Board::fromFile("4x4.sudoku");
 
@@ -698,7 +849,8 @@ int main(int argc, char* argv[])
 		cout << "Defeat\n";
 
 	/*~~~~ 4x4 board Forward Checking ~~~~*/ 
-	inputBoard_4x4 = Board::fromFile("4x4.sudoku");
+	/*Board* inputBoardFC_4x4 = Board::fromFile("4x4.sudoku");
+	
 
 	cout << "4x4 Board Forward Checking\n";
 	int numberOfConsistencyChecks_4x4_FCheck = backTrackingSearchFCheck(inputBoard_4x4);
@@ -708,7 +860,7 @@ int main(int argc, char* argv[])
 	else
 		cout << "Defeat\n";
 	
-
+	*/
 
 	/*~~~~ 9x9 board ~~~~*/
 	Board *inputBoard_9x9 = Board::fromFile("9x9.sudoku");
