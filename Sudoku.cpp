@@ -580,15 +580,23 @@ bool Board::FCheck(int r, int c, int x) {
 	
 	for (int i=1; i<dim+1 ;i++)
 	{
-		popRemainingValues(r, i, x);
-		popRemainingValues(i, c, x);
-		if (this->index[r-1][c-1] == 0) {
-			resetRemainingValues(r, c, x);
-			return false;
+		if (i != c)
+		{
+			popRemainingValues(r, i, x);
+			if (this->index[r-1][i-1] == 0)
+			{
+				resetRemainingValues(r, c, x);
+				return false;
+			}
 		}
-		if (this->index[i-1][c-1] == 0) {
-			resetRemainingValues(r, c, x);
-			return false;
+		if (i != r)
+		{
+			popRemainingValues(i, c, x);
+			if (this->index[i-1][c-1] == 0)
+			{
+				resetRemainingValues(r, c, x);
+				return false;
+			}
 		}
 	}
 
