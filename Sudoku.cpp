@@ -583,9 +583,11 @@ bool Board::FCheck(int r, int c, int x) {
 		popRemainingValues(r, i, x);
 		popRemainingValues(i, c, x);
 		if (this->index[r-1][c-1] == 0) {
+			resetRemainingValues(r, c, x);
 			return false;
 		}
 		if (this->index[i-1][c-1] == 0) {
+			resetRemainingValues(r, c, x);
 			return false;
 		}
 	}
@@ -609,6 +611,7 @@ bool Board::FCheck(int r, int c, int x) {
 		  
 		  popRemainingValues(subBoardRow*dimsqrt+k, subBoardCol*dimsqrt+m, x);
 		  if (this->index[subBoardRow*dimsqrt+k-1][subBoardCol*dimsqrt+m-1] == 0) {
+		  	resetRemainingValues(r, c, x);
 		  	return false;
 		  }
 			
@@ -770,13 +773,13 @@ int recursiveBackTrackingSearchFCheck(Board *currentBoard, int consistencyCount)
 			return consistencyCount;
 		} 
 		//cout << i << " "; //See each attempted input
-		if (currentBoard->isValidMove(emptySquare,i))
+		if (currentBoard->isValidMove(emptySquare,i) && currentBoard->FCheck(emptySquare.row, emptySquare.col, i))
 		{
 			/* If you find a number that is allowed, fill it in and recurse */
 			currentBoard->set_square_value(emptySquare.row, emptySquare.col, i);
 			// Now forward check, but maintain all current remaining values
 			// Need to save current remaining values and put them back, if necessary
-			currentBoard->FCheck(emptySquare.row, emptySquare.col, i);
+			//currentBoard->FCheck(emptySquare.row, emptySquare.col, i);
 			consistencyCount = recursiveBackTrackingSearch(currentBoard, consistencyCount);
 
 
