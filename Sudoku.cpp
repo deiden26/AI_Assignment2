@@ -80,7 +80,7 @@ public:
 	int popRemainingValues(int r, int c, int x);
 	void resetRemainingValues(int r, int c, int x);
 	void printRemainingValues(int r, int c);
-	int findConstrainingValues(int r, int c);
+	void findConstrainingValues(int r, int c);
 	void initializeRemainingValues();
 };
 
@@ -463,7 +463,7 @@ int Board::popRemainingValues(int r, int c, int x)
 	for (int i=0; i<ind; i++) {
 		if (remainingValues[r-1][c-1][i] == x) {
 			//remainingValues[r-1][c-1][i] = -1;
-			for (i; i < ind; i++) {
+			for (; i < ind; i++) {
 				remainingValues[r-1][c-1][i] = remainingValues[r-1][c-1][i+1];
 			} 
 			ind--;
@@ -523,7 +523,7 @@ void Board::printRemainingValues(int r, int c) {
 	cout << endl;
 }
 
-int Board::findConstrainingValues(int r, int c) {
+void Board::findConstrainingValues(int r, int c) {
 	// Find the restraining values and then remove them from the list of remaining values
 	
 	for (int i=1; i<dim+1 ;i++)
