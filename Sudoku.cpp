@@ -1,5 +1,6 @@
-// Sudoku.cpp : Basic class for holding a Sudoku board, reading a board from files, a writing a board to the screen
-//
+// Programmers: Craig Olson, Stephen Chan, Danny Eiden
+// Github: https://github.com/deiden26/AI_Assignment2
+
 
 #include <stdlib.h>
 #include <iostream>
@@ -13,6 +14,8 @@
 
 using namespace std;
 
+#define  consistencyMax 10000000
+
 /*###### rowCol Class ######*/
 class rowCol
 {
@@ -24,19 +27,20 @@ public:
 	void setRowCol(int r, int c);
 };
 
+/* Craig */
 rowCol::rowCol() 
 {
 	row = 0;
 	col = 0;
 }
-
+/* Danny */
 rowCol::rowCol(int inputRow, int inputCol)
 {
 	row = inputRow;
 	col = inputCol;
 	return;
 }
-
+/* Craig */
 void rowCol::setRowCol(int r, int c) {
 	row = r;
 	col = c;
@@ -201,6 +205,7 @@ bool Board::checkForVictory() {
 	}
 	return true;
 }
+/* Danny */
 rowCol Board::findEmptySquare()
 {
 	/* Search every element of the board  until	*/
@@ -220,6 +225,7 @@ rowCol Board::findEmptySquare()
 	return rowCol(0, 0);
 }
 
+/* Danny */
 bool Board::isValidMove(rowCol position, int newValue)
 {
 	for (int i=1; i<dim+1 ;i++)
@@ -258,12 +264,14 @@ bool Board::isValidMove(rowCol position, int newValue)
 	return true;
 }
 
+/* Danny */
 void Board::setFailed(bool state)
 {
 	failed = state;
 	return;
 }
 
+/* Danny */
 void Board::printBoard()
 {
 	/* Print top, horizontal line of the board */
@@ -313,6 +321,7 @@ void Board::printBoard()
 	return;
 }
 
+/* Danny */
 int Board::numberOfConstraints(rowCol position)
 {
   // need to make this a variable sized array depending on size of board
@@ -361,6 +370,7 @@ int Board::numberOfConstraints(rowCol position)
 
 }
 
+/* Danny */
 rowCol Board::mostConstrainedFreeSquare()
 {
   rowCol mostConstrained = rowCol(0, 0);
@@ -394,6 +404,8 @@ rowCol Board::mostConstrainedFreeSquare()
 	return mostConstrained;
 }
 
+
+/* Stephen */
 int Board::numberOfConstraining(rowCol position)
 {
   /* For each square, there are up to 
@@ -448,6 +460,7 @@ int Board::numberOfConstraining(rowCol position)
   return constrainingCount;
 }
 
+/* Craig */
 void Board::pushRemainingValues(int r, int c, int x)
 {
 	int ind = index[r-1][c-1];
@@ -459,6 +472,7 @@ void Board::pushRemainingValues(int r, int c, int x)
 	return;
 }
 
+/* Craig */
 int Board::popRemainingValues(int r, int c, int x)
 {
 	int ind = index[r-1][c-1];
@@ -476,6 +490,7 @@ int Board::popRemainingValues(int r, int c, int x)
 	return -1;
 }
 
+/* Craig */
 void Board::resetRemainingValues(int r, int c, int x) {
 	// Find the restraining values and then remove them from the list of remaining values
 	rowCol row, col, sub;
@@ -516,6 +531,7 @@ void Board::resetRemainingValues(int r, int c, int x) {
 	return;
 }
 
+/* Craig */
 void Board::printRemainingValues(int r, int c) {
 	cout << "Remaining Values:\n\t";
 	int ind = index[r-1][c-1];
@@ -524,7 +540,7 @@ void Board::printRemainingValues(int r, int c) {
 	}
 	cout << endl;
 }
-
+/* Craig */
 void Board::findConstrainingValues(int r, int c) {
 	// Find the restraining values and then remove them from the list of remaining values
 	
@@ -567,6 +583,7 @@ void Board::findConstrainingValues(int r, int c) {
 	
 }
 
+/* Craig */
 void Board::initializeRemainingValues() {
 	for (int i=1; i<=dim; i++) {
 		for (int j=1; j<=dim; j++) {
@@ -577,6 +594,7 @@ void Board::initializeRemainingValues() {
 	}
 }
 
+/* Craig & Danny */
 bool Board::FCheck(int r, int c, int x) {
 	// Find the restraining values and then remove them from the list of remaining values
 	
@@ -641,6 +659,7 @@ bool Board::FCheck(int r, int c, int x) {
 	return true;
 }
 
+/* Stephen Danny */
 rowCol Board:: mrvMcvFreeSquare()
 /* Chooses minimum remaining value square of the board.
  * Ties are broken using the constraining variable count */
@@ -667,6 +686,7 @@ rowCol Board:: mrvMcvFreeSquare()
 			{
 				// break the tie!
 				int mostConstrainedConstraining = 0;
+				// Test for mostConstrained == (0,0) which isn't a real board position 
 				if (mostConstrained.row != 0)
 				{
 					mostConstrainedConstraining= numberOfConstraining(mostConstrained);
@@ -684,6 +704,8 @@ rowCol Board:: mrvMcvFreeSquare()
 	/* free square was found				*/
 	return mostConstrained;
 }
+
+/* Stephen Danny */
 void Board::leastConstrainingValues(rowCol position, int* values)
 {
 	/* Returns a list of all values that can be used to fill the square at
@@ -776,8 +798,7 @@ void Board::leastConstrainingValues(rowCol position, int* values)
 }
 
 /*###### BackTracking Search ######*/
-
-
+/* Danny */
 int recursiveBackTrackingSearch(Board *currentBoard, int consistencyCount)
 {
 	//currentBoard->printBoard(); //See board at every recursion
@@ -790,7 +811,7 @@ int recursiveBackTrackingSearch(Board *currentBoard, int consistencyCount)
 	for (int i=1; i<currentBoard->get_dim()+1; i++)
 	{
 		consistencyCount++;
-		if (consistencyCount >= 2000000)
+		if (consistencyCount >= consistencyMax)
 		{
 			return consistencyCount;
 		}
@@ -822,7 +843,7 @@ int backTrackingSearch(Board *initialBoard)
 }
 
 /*###### BackTracking Search W/ MRV+MCV ######*/
-
+/* Stephen Danny */
 int recursiveBackTrackingSearchMrvMcv(Board *currentBoard, int consistencyCount)
 {
 	//currentBoard->printBoard(); //See board at every recursion
@@ -835,7 +856,7 @@ int recursiveBackTrackingSearchMrvMcv(Board *currentBoard, int consistencyCount)
 	for (int i=1; i<currentBoard->get_dim()+1; i++)
 	{
 		consistencyCount++;
-		if (consistencyCount >= 2000000)
+		if (consistencyCount >= consistencyMax)
 		{
 			return consistencyCount;
 		}
@@ -866,6 +887,7 @@ int backTrackingSearchMrvMcv(Board *initialBoard)
 	return numberOfConsistencyChecks;
 }
 /*###### BackTracking Search W/ MRV+MCV+LCV ######*/
+/* Stephen Danny */
 int recursiveBackTrackingSearchMrvMcvLcv(Board *currentBoard, int consistencyCount)
 {
 	//currentBoard->printBoard(); //See board at every recursion
@@ -882,7 +904,7 @@ int recursiveBackTrackingSearchMrvMcvLcv(Board *currentBoard, int consistencyCou
 	{
 		int attemptValue = values[i];
 		consistencyCount++;
-		if (consistencyCount >= 2000000)
+		if (consistencyCount >= consistencyMax)
 		{
 			return consistencyCount;
 		}
@@ -914,6 +936,7 @@ int backTrackingSearchMrvMcvLcv(Board *initialBoard)
 }
 
 /*###### BackTracking Search W/ Forward Checking ######*/
+/* Craig Danny */
 int recursiveBackTrackingSearchFCheck(Board *currentBoard, int consistencyCount)
 {
 	//currentBoard->printBoard(); //See board at every recursion
@@ -927,7 +950,7 @@ int recursiveBackTrackingSearchFCheck(Board *currentBoard, int consistencyCount)
 	for (int i=1; i<currentBoard->get_dim()+1; i++)
 	{
 		consistencyCount++;
-		if (consistencyCount >= 2000000)
+		if (consistencyCount >= consistencyMax)
 		{
 			return consistencyCount;
 		} 
@@ -969,7 +992,7 @@ int backTrackingSearchFCheck(Board *initialBoard)
 
 
 /*###### main Function ######*/
-
+/* Danny */
 int main(int argc, char* argv[])
 {
 	/*~~~~ 4x4 board BackTracking ~~~~*/
@@ -1163,16 +1186,16 @@ int main(int argc, char* argv[])
 	cout << numberOfConsistencyChecks_9x9_MRV_LVC << setw(14) << "| ";
 	cout << numberOfConsistencyChecks_9x9_FCheck << setw(12) << "|" << endl;
 	/* 16x16 Row */
-	cout << "| " << "16x16" << setw(6) << "| " << numberOfConsistencyChecks_16x16 << setw(10) << "| ";
+	cout << "| " << "16x16" << setw(6) << "| " << numberOfConsistencyChecks_16x16 << setw(9) << "| ";
 	cout << numberOfConsistencyChecks_16x16_MRV << setw(6) << "| ";
 	cout << numberOfConsistencyChecks_16x16_MRV_LVC << setw(12) << "| ";
-	cout << numberOfConsistencyChecks_16x16_FCheck << setw(11) << "|" << endl;
+	cout << numberOfConsistencyChecks_16x16_FCheck << setw(10) << "|" << endl;
 
 	/* 25x25 Row */
-	cout << "| " << "25x25" << setw(6) << "| " << numberOfConsistencyChecks_25x25 << setw(10) << "| ";
-	cout << numberOfConsistencyChecks_25x25_MRV << setw(5) << "| ";
-	cout << numberOfConsistencyChecks_25x25_MRV_LVC << setw(11) << "| ";
-	cout << numberOfConsistencyChecks_25x25_FCheck << setw(11) << "|" << endl;
+	cout << "| " << "25x25" << setw(6) << "| " << numberOfConsistencyChecks_25x25 << setw(9) << "| ";
+	cout << numberOfConsistencyChecks_25x25_MRV << setw(4) << "| ";
+	cout << numberOfConsistencyChecks_25x25_MRV_LVC << setw(10) << "| ";
+	cout << numberOfConsistencyChecks_25x25_FCheck << setw(10) << "|" << endl;
 	cout << endl;
 
 	return 1;
