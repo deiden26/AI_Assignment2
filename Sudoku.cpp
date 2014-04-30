@@ -582,20 +582,26 @@ bool Board::FCheck(int r, int c, int x) {
 	{
 		if (i != c)
 		{
-			popRemainingValues(r, i, x);
-			if (this->index[r-1][i-1] == 0)
+			if (this->get_square_value(r, i) == 0)
 			{
-				resetRemainingValues(r, c, x);
-				return false;
+				popRemainingValues(r, i, x);
+				if (this->index[r-1][i-1] == 0)
+				{
+					resetRemainingValues(r, c, x);
+					return false;
+				}
 			}
 		}
 		if (i != r)
 		{
-			popRemainingValues(i, c, x);
-			if (this->index[i-1][c-1] == 0)
+			if (this->get_square_value(i, c) == 0)
 			{
-				resetRemainingValues(r, c, x);
-				return false;
+				popRemainingValues(i, c, x);
+				if (this->index[i-1][c-1] == 0)
+				{
+					resetRemainingValues(r, c, x);
+					return false;
+				}
 			}
 		}
 	}
@@ -613,12 +619,17 @@ bool Board::FCheck(int r, int c, int x) {
 		{
 	      // We don't want to double count any of the free squares that were already counted
 	      // in the row and column
-	      if ( subBoardRow * dimsqrt + k == r || subBoardCol * dimsqrt + m == c ) {
+	      if ( subBoardRow * dimsqrt + k == r || subBoardCol * dimsqrt + m == c )
+	      {
 	        continue;
 	      }
-		  
+		  if (this->get_square_value(subBoardRow * dimsqrt + k, subBoardCol * dimsqrt + m))
+		  {
+		  	continue;
+		  }
 		  popRemainingValues(subBoardRow*dimsqrt+k, subBoardCol*dimsqrt+m, x);
-		  if (this->index[subBoardRow*dimsqrt+k-1][subBoardCol*dimsqrt+m-1] == 0) {
+		  if (this->index[subBoardRow*dimsqrt+k-1][subBoardCol*dimsqrt+m-1] == 0)
+		  {
 		  	resetRemainingValues(r, c, x);
 		  	return false;
 		  }
