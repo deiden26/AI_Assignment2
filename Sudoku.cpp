@@ -462,7 +462,7 @@ int Board::popRemainingValues(int r, int c, int x)
 	int ind = index[r-1][c-1];
 	for (int i=0; i<ind; i++) {
 		if (remainingValues[r-1][c-1][i] == x) {
-			remainingValues[r-1][c-1][i] = -1;
+			//remainingValues[r-1][c-1][i] = -1;
 			for (i; i < ind; i++) {
 				remainingValues[r-1][c-1][i] = remainingValues[r-1][c-1][i+1];
 			} 
@@ -780,7 +780,7 @@ int recursiveBackTrackingSearchFCheck(Board *currentBoard, int consistencyCount)
 			// Now forward check, but maintain all current remaining values
 			// Need to save current remaining values and put them back, if necessary
 			//currentBoard->FCheck(emptySquare.row, emptySquare.col, i);
-			consistencyCount = recursiveBackTrackingSearch(currentBoard, consistencyCount);
+			consistencyCount = recursiveBackTrackingSearchFCheck(currentBoard, consistencyCount);
 
 
 			if(!(currentBoard->hasFailed()))
